@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>DeepSeek Harness GitHub Ranker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <style>
+        /* ─── Material 3 Dark Theme Tokens ─── */
+        :root {
+            color-scheme: dark;
+
+            /* Primary */
+            --md-primary:           #D0BCFF;
+            --md-on-primary:        #381E72;
+            --md-primary-container: #4F378B;
+            --md-on-primary-container: #EADDFF;
+
+            /* Secondary */
+            --md-secondary:           #CCC2DC;
+            --md-on-secondary:        #332D41;
+            --md-secondary-container: #4A4458;
+            --md-on-secondary-container: #E8DEF8;
+
+            /* Tertiary */
+            --md-tertiary:           #EFB8C8;
+            --md-on-tertiary:        #492532;
+            --md-tertiary-container: #633B48;
+            --md-on-tertiary-container: #FFD8E4;
+
+            /* Surface */
+            --md-surface:            #141218;
+            --md-surface-dim:        #141218;
+            --md-surface-bright:     #3B383E;
+            --md-surface-container-lowest:  #0F0D13;
+            --md-surface-container-low:     #1D1B20;
+            --md-surface-container:         #211F26;
+            --md-surface-container-high:    #2B2930;
+            --md-surface-container-highest: #36343B;
+            --md-on-surface:         #E6E0E9;
+            --md-on-surface-variant:  #CAC4D0;
+            --md-outline:            #938F99;
+            --md-outline-variant:    #49454F;
+
+            /* Error & Warning */
+            --md-error:              #F2B8B5;
+            --md-error-container:    #601410;
+            --md-on-error-container: #F9DEDC;
+            --md-warning-container:  #3E2D04;
+            --md-on-warning-container:#FFE088;
+
+            /* Podium rank accents */
+            --podium-gold:    #FFD700;
+            --podium-silver:  #C0C0C0;
+            --podium-bronze:  #CD7F32;
+
+            /* Shape */
+            --md-shape-xs: 8px;
+            --md-shape-sm: 12px;
+            --md-shape-md: 18px;
+            --md-shape-lg: 24px;
+            --md-shape-full: 9999px;
+
+            /* Motion */
+            --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+            --md-motion-duration-short:  200ms;
+            --md-motion-duration-medium: 400ms;
+
+            /* Typography Stack */
+            --font-head: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-head);
+            background: var(--md-surface);
+            color: var(--md-on-surface);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 56px 24px;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .header h1 {
+            font-family: var(--font-head);
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--md-on-surface);
+            letter-spacing: -0.8px;
+            line-height: 1.25;
+        }
+        .header p {
+            font-size: 19px;
+            font-weight: 500;
+            color: var(--md-on-surface-variant);
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* ─── API Limit Chip Bar ─── */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--md-on-surface-variant);
+        }
+        .rate-limit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: var(--md-shape-full);
+            background: var(--md-surface-container-high);
+            font-family: var(--font-code);
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+        .token-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--md-primary);
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* ─── Token drawer ─── */
+        .token-drawer {
+            display: none;
+            background: var(--md-surface-container-high);
+            padding: 16px 20px;
+            border-radius: var(--md-shape-sm);
+            margin-bottom: 24px;
+            gap: 12px;
+            align-items: center;
+        }
+        .token-drawer input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--md-outline);
+            border-radius: var(--md-shape-xs);
+            background: var(--md-surface-container);
+            color: var(--md-on-surface);
+            font-family: var(--font-code);
+            font-size: 14px;
+        }
+        .token-drawer button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--md-shape-full);
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            font-family: var(--font-head);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* ─── Controls (M3 Surface Card) ─── */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            background: var(--md-surface-container);
+            padding: 28px 32px;
+            border-radius: var(--md-shape-md);
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-group label {
+            font-family: var(--font-code);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--md-on-surface-variant);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding-left: 2px;
+        }
+
+        /* Selects */
+        .controls select, .controls input[type="text"] {
+            padding: 14px 44px 14px 18px;
+            border: 1px solid var(--md-outline);
+            border-radius: var(--md-shape-xs);
+            font-size: 17px;
+            font-weight: 600;
+            font-family: var(--font-head);
+            line-height: 1.4;
+            background-color: var(--md-surface-container-high);
+            color: var(--md-on-surface);
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23CAC4D0' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            min-width: 170px;
+            transition: border-color var(--md-motion-duration-short) var(--md-motion-easing-standard);
+        }
+        .controls select option {
+            background-color: #2B2930;
+            color: #E6E0E9;
+            padding: 12px;
+            font-size: 16px;
+        }
+        .controls select:hover, .controls input[type="text"]:hover {
+            border-color: var(--md-on-surface);
+        }
+        .controls select:focus, .controls input[type="text"]:focus {
+            outline: none;
+            border-color: var(--md-primary);
+            border-width: 2px;
+            padding: 13px 43px 13px 17px;
+        }
+
+        /* Quick Filter Bar */
+        .filter-bar {
+            margin-bottom: 32px;
+            display: flex;
+            gap: 12px;
+        }
+        .filter-bar input {
+            flex: 1;
+            padding: 14px 20px 14px 48px;
+            border: 1px solid var(--md-outline-variant);
+            border-radius: var(--md-shape-full);
+            background: var(--md-surface-container-low);
+            color: var(--md-on-surface);
+            font-family: var(--font-head);
+            font-size: 17px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23CAC4D0' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 16px center;
+            transition: border-color var(--md-motion-duration-short);
+        }
+        .filter-bar input:focus {
+            outline: none;
+            border-color: var(--md-primary);
+        }
+
+        /* Buttons */
+        #fetchBtn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: var(--md-shape-full);
+            font-size: 17px;
+            font-weight: 700;
+            font-family: var(--font-head);
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            background: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            transition: box-shadow var(--md-motion-duration-short) var(--md-motion-easing-standard),
+                        background var(--md-motion-duration-short) var(--md-motion-easing-standard);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            height: 54px;
+        }
+        #fetchBtn:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        }
+        #fetchBtn:active {
+            box-shadow: none;
+        }
+        #fetchBtn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--md-on-secondary-container);
+            opacity: 0;
+            transition: opacity var(--md-motion-duration-short);
+            pointer-events: none;
+        }
+        #fetchBtn:hover::after { opacity: 0.08; }
+        #fetchBtn:active::after { opacity: 0.12; }
+
+        /* ─── Loading (M3 Circular Indicator) ─── */
+        #loading {
+            text-align: center;
+            padding: 80px 24px;
+            display: none;
+            color: var(--md-on-surface-variant);
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .spinner {
+            display: inline-block;
+            width: 44px; height: 44px;
+            border: 4px solid var(--md-surface-container-highest);
+            border-top-color: var(--md-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── Error (M3 Error Container) ─── */
+        #error {
+            text-align: center;
+            padding: 22px 32px;
+            display: none;
+            color: var(--md-on-error-container);
+            background: var(--md-error-container);
+            border-radius: var(--md-shape-md);
+            margin-bottom: 32px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        #error.warning {
+            color: var(--md-on-warning-container);
+            background: var(--md-warning-container);
+        }
+
+        /* ─── Podium Section ─── */
+        .podium-section {
+            margin-bottom: 28px;
+        }
+        .podium {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .podium-card {
+            background: var(--md-surface-container-low);
+            border-radius: var(--md-shape-md);
+            padding: 32px 24px 28px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 10px 1px rgba(0,0,0,0.15);
+            transition: box-shadow var(--md-motion-duration-medium) var(--md-motion-easing-standard);
+        }
+        .podium-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 8px 20px 2px rgba(0,0,0,0.25);
+        }
+
+        /* Podium order: 🥈 | 🥇 | 🥉 */
+        .podium-card[data-rank="1"] { order: 2; }
+        .podium-card[data-rank="2"] { order: 1; }
+        .podium-card[data-rank="3"] { order: 3; }
+
+        .podium-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+        }
+        .podium-card[data-rank="1"]::before { background: var(--podium-gold); }
+        .podium-card[data-rank="2"]::before { background: var(--podium-silver); }
+        .podium-card[data-rank="3"]::before { background: var(--podium-bronze); }
+
+        .podium-medal {
+            font-size: 42px;
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+        .podium-avatar {
+            width: 72px; height: 72px;
+            border-radius: var(--md-shape-full);
+            object-fit: cover;
+            margin-bottom: 16px;
+        }
+        .podium-card[data-rank="1"] .podium-avatar { width: 88px; height: 88px; }
+
+        .podium-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--md-on-surface);
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.3;
+        }
+        .podium-name a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .podium-name a:hover { color: var(--md-primary); }
+
+        .podium-desc {
+            font-size: 15px;
+            color: var(--md-on-surface-variant);
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 44px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .podium-stat {
+            font-family: var(--font-code);
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-top: auto;
+        }
+        .podium-card[data-rank="1"] .podium-stat { color: var(--podium-gold); }
+        .podium-card[data-rank="2"] .podium-stat { color: var(--podium-silver); }
+        .podium-card[data-rank="3"] .podium-stat { color: var(--podium-bronze); }
+
+        .podium-stat-label {
+            font-family: var(--font-code);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--md-on-surface-variant);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 4px;
+        }
+
+        /* Additional Stats breakdown on podium cards */
+        .podium-extra-stats {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            font-family: var(--font-code);
+            font-size: 13px;
+            color: var(--md-on-surface-variant);
+        }
+
+        /* ─── Repo List (M3 List) ─── */
+        .list-section {
+            background: var(--md-surface-container-low);
+            border-radius: var(--md-shape-md);
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 10px 1px rgba(0,0,0,0.15);
+        }
+
+        .repo-row {
+            display: grid;
+            grid-template-columns: 48px 52px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            padding: 20px 32px 20px 24px;
+            min-height: 80px;
+            position: relative;
+            transition: background var(--md-motion-duration-short) var(--md-motion-easing-standard);
+        }
+        .repo-row + .repo-row {
+            border-top: 1px solid var(--md-outline-variant);
+        }
+        .repo-row::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--md-on-surface);
+            opacity: 0;
+            transition: opacity var(--md-motion-duration-short);
+            pointer-events: none;
+        }
+        .repo-row:hover::after { opacity: 0.08; }
+
+        .rank-badge {
+            width: 42px; height: 42px;
+            border-radius: var(--md-shape-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-code);
+            font-size: 16px;
+            font-weight: 700;
+            background: var(--md-surface-container-highest);
+            color: var(--md-on-surface-variant);
+            flex-shrink: 0;
+        }
+        .repo-avatar {
+            width: 50px; height: 50px;
+            border-radius: var(--md-shape-full);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .repo-body {
+            min-width: 0;
+        }
+        .repo-title {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .repo-title a {
+            text-decoration: none;
+            color: var(--md-primary);
+        }
+        .repo-title a:hover { text-decoration: underline; }
+        .repo-subtitle {
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--md-on-surface-variant);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .repo-metrics-breakdown {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--font-code);
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--md-on-surface);
+            white-space: nowrap;
+        }
+        .metric-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--md-on-surface-variant);
+        }
+        .metric-chip.active {
+            color: var(--md-primary);
+            font-weight: 700;
+        }
+        .metric-chip .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        /* ─── Load More (M3 Outlined Button) ─── */
+        .load-more-wrap {
+            text-align: center;
+            padding: 32px;
+            display: none;
+        }
+        .load-more-wrap button {
+            padding: 14px 36px;
+            border: 1.5px solid var(--md-outline);
+            border-radius: var(--md-shape-full);
+            font-size: 16px;
+            font-weight: 700;
+            font-family: var(--font-head);
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--md-primary);
+            position: relative;
+            overflow: hidden;
+            transition: border-color var(--md-motion-duration-short);
+        }
+        .load-more-wrap button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--md-primary);
+            opacity: 0;
+            transition: opacity var(--md-motion-duration-short);
+            pointer-events: none;
+        }
+        .load-more-wrap button:hover::after { opacity: 0.08; }
+        .load-more-wrap button:active::after { opacity: 0.12; }
+
+        .fetching-more {
+            text-align: center;
+            padding: 24px;
+            color: var(--md-on-surface-variant);
+            font-size: 15px;
+            display: none;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 110px 24px;
+            color: var(--md-on-surface-variant);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .empty-state .material-symbols-outlined {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 24px;
+            color: var(--md-outline);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .container { padding: 32px 16px; }
+            .header h1 { font-size: 32px; }
+            .podium {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .podium-card[data-rank="1"],
+            .podium-card[data-rank="2"],
+            .podium-card[data-rank="3"] { order: unset; }
+            .podium-card {
+                flex-direction: row;
+                text-align: left;
+                padding: 24px;
+                gap: 20px;
+            }
+            .podium-medal { font-size: 32px; margin-bottom: 0; }
+            .podium-avatar { width: 60px; height: 60px; margin-bottom: 0; }
+            .podium-card[data-rank="1"] .podium-avatar { width: 60px; height: 60px; }
+            .podium-desc { height: auto; margin-bottom: 8px; }
+            .repo-row {
+                grid-template-columns: 36px 44px 1fr;
+                gap: 14px;
+                padding: 16px;
+            }
+            .repo-metrics-breakdown {
+                grid-column: 1 / -1;
+                justify-content: flex-end;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GitHub Ranker</h1>
+            <p>Top repositories related to DeepSeek Harness</p>
+        </div>
+
+        <!-- API Rate Limit & Token Status Bar -->
+        <div class="status-bar">
+            <div class="rate-limit-badge" id="rateLimitBadge">
+                <span class="material-symbols-outlined" style="font-size:18px;">api</span>
+                <span id="rateLimitText">API Requests: Checking...</span>
+            </div>
+            <button class="token-toggle-btn" id="tokenToggleBtn">GitHub Token (Optional)</button>
+        </div>
+
+        <div class="token-drawer" id="tokenDrawer">
+            <input type="text" id="tokenInput" placeholder="Paste GitHub personal access token (ghp_...)" />
+            <button id="saveTokenBtn">Save</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="period">Period</label>
+                <select id="period">
+                    <option value="day">Past day</option>
+                    <option value="week" selected>Past week</option>
+                    <option value="month">Past month</option>
+                    <option value="year">Past year</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="metric">Metric</label>
+                <select id="metric">
+                    <option value="stars" selected>Stars</option>
+                    <option value="forks">Forks</option>
+                    <option value="watches">Watchers</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="count">Show</label>
+                <select id="count">
+                    <option value="20" selected>Top 20</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                </select>
+            </div>
+            <button id="fetchBtn">
+                <span class="material-symbols-outlined" style="font-size:22px;">search</span>Fetch Rankings
+            </button>
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Searching GitHub&hellip;</div>
+        </div>
+        <div id="error"></div>
+
+        <div id="results" style="display:none">
+            <!-- Client-side quick filter bar -->
+            <div class="filter-bar">
+                <input type="text" id="filterInput" placeholder="Quick search loaded repos by name or description..." />
+            </div>
+
+            <div class="podium-section">
+                <div class="podium" id="podium"></div>
+            </div>
+            <div class="list-section" id="repoList"></div>
+            <div class="load-more-wrap" id="loadMoreWrap">
+                <button id="loadMoreBtn">Load more</button>
+            </div>
+            <div class="fetching-more" id="fetchingMore">
+                <div class="spinner" style="width:28px;height:28px;border-width:3px;"></div>
+                Loading&hellip;
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <span class="material-symbols-outlined icon-filled">leaderboard</span>
+            Pick your filters and press <strong>Fetch Rankings</strong> to get started.
+        </div>
+    </div>
+
+<script>
+(function() {
+    var allRepos = [];
+    var currentPage = 0;
+    var perPage = 30;
+    var targetCount = 20;
+    var hasMore = false;
+    var isFetching = false;
+    var currentQuery = {};
+
+    var $loading      = document.getElementById('loading');
+    var $error        = document.getElementById('error');
+    var $results      = document.getElementById('results');
+    var $podium       = document.getElementById('podium');
+    var $repoList     = document.getElementById('repoList');
+    var $loadMoreWrap = document.getElementById('loadMoreWrap');
+    var $loadMoreBtn  = document.getElementById('loadMoreBtn');
+    var $fetchingMore = document.getElementById('fetchingMore');
+    var $emptyState   = document.getElementById('emptyState');
+    var $filterInput  = document.getElementById('filterInput');
+    var $rateLimitTxt = document.getElementById('rateLimitText');
+    var $tokenDrawer  = document.getElementById('tokenDrawer');
+    var $tokenInput   = document.getElementById('tokenInput');
+    var $saveTokenBtn = document.getElementById('saveTokenBtn');
+
+    // Token management
+    var storedToken = localStorage.getItem('gh_token') || '';
+    if (storedToken) $tokenInput.value = storedToken;
+
+    document.getElementById('tokenToggleBtn').addEventListener('click', function() {
+        $tokenDrawer.style.display = $tokenDrawer.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    $saveTokenBtn.addEventListener('click', function() {
+        var val = $tokenInput.value.trim();
+        localStorage.setItem('gh_token', val);
+        storedToken = val;
+        $tokenDrawer.style.display = 'none';
+        alert(val ? 'GitHub token saved!' : 'Token cleared.');
+        checkRateLimit();
+    });
+
+    document.getElementById('fetchBtn').addEventListener('click', function() { startFetch(); });
+    $loadMoreBtn.addEventListener('click', loadMore);
+    $filterInput.addEventListener('input', function() { render(); });
+
+    var MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+
+    function getHeaders() {
+        var h = {};
+        if (storedToken) h['Authorization'] = 'Bearer ' + storedToken;
+        return h;
+    }
+
+    function checkRateLimit() {
+        fetch('https://api.github.com/rate_limit', { headers: getHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.resources && data.resources.search) {
+                    var s = data.resources.search;
+                    $rateLimitTxt.textContent = 'API Remaining: ' + s.remaining + '/' + s.limit;
+                }
+            }).catch(function() {});
+    }
+
+    function metricIcon(m) {
+        if (m === 'stars') return 'star';
+        if (m === 'forks') return 'fork_right';
+        return 'visibility';
+    }
+    function metricVal(repo, m) {
+        if (m === 'stars') return repo.stargazers_count;
+        if (m === 'forks') return repo.forks_count;
+        return repo.watchers_count;
+    }
+    function metricLabel(m) {
+        if (m === 'stars') return 'Stars';
+        if (m === 'forks') return 'Forks';
+        return 'Watchers';
+    }
+    function fmt(n) {
+        if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        return String(n);
+    }
+    function dateStr(period) {
+        var d = new Date();
+        switch (period) {
+            case 'day':   d.setDate(d.getDate() - 1);         break;
+            case 'week':  d.setDate(d.getDate() - 7);         break;
+            case 'month': d.setMonth(d.getMonth() - 1);       break;
+            case 'year':  d.setFullYear(d.getFullYear() - 1); break;
+        }
+        return d.toISOString().split('T')[0];
+    }
+    function esc(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s));
+        return d.innerHTML;
+    }
+
+    // ── Cache helper (5 min TTL) ──
+    function getCacheKey(p, m, page) {
+        return 'gh_ranker_cache_' + p + '_' + m + '_' + page;
+    }
+    function getFromCache(p, m, page) {
+        try {
+            var raw = sessionStorage.getItem(getCacheKey(p, m, page));
+            if (!raw) return null;
+            var obj = JSON.parse(raw);
+            if (Date.now() - obj.time > 5 * 60 * 1000) return null;
+            return obj.data;
+        } catch(e) { return null; }
+    }
+    function setToCache(p, m, page, data) {
+        try {
+            sessionStorage.setItem(getCacheKey(p, m, page), JSON.stringify({ time: Date.now(), data: data }));
+        } catch(e) {}
+    }
+
+    function startFetch(auto) {
+        allRepos = [];
+        currentPage = 0;
+        hasMore = false;
+        $filterInput.value = '';
+        targetCount = parseInt(document.getElementById('count').value, 10);
+        currentQuery = {
+            period: document.getElementById('period').value,
+            metric: document.getElementById('metric').value,
+        };
+        $emptyState.style.display = 'none';
+        $error.style.display = 'none';
+        $error.classList.remove('warning');
+        $results.style.display = 'none';
+        $loading.style.display = 'block';
+        fetchNextPage();
+    }
+
+    function fetchNextPage() {
+        if (isFetching) return;
+        isFetching = true;
+        currentPage++;
+
+        var p = currentQuery.period;
+        var m = currentQuery.metric;
+
+        // Check sessionStorage cache first
+        var cached = getFromCache(p, m, currentPage);
+        if (cached) {
+            isFetching = false;
+            $loading.style.display = 'none';
+            $fetchingMore.style.display = 'none';
+            processResponseData(cached);
+            return;
+        }
+
+        var ds   = dateStr(p);
+        var sort = m === 'watches' ? 'updated' : m;
+        var q    = 'deepseek-harness in:name,description,readme created:>' + ds;
+        var url  = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
+                 + '&sort=' + sort + '&order=desc&per_page=' + perPage + '&page=' + currentPage;
+
+        fetch(url, { headers: getHeaders() })
+            .then(function(r) {
+                // Read rate limit headers
+                var rem = r.headers.get('x-ratelimit-remaining');
+                var lim = r.headers.get('x-ratelimit-limit');
+                if (rem !== null) {
+                    $rateLimitTxt.textContent = 'API Remaining: ' + rem + '/' + lim;
+                }
+
+                if (r.status === 403 || r.status === 429) {
+                    var resetTime = r.headers.get('x-ratelimit-reset');
+                    var waitSecs = resetTime ? Math.max(1, Math.ceil(resetTime - (Date.now() / 1000))) : 60;
+                    throw new Error('RATE_LIMIT:' + waitSecs);
+                }
+                if (!r.ok) throw new Error('GitHub API returned ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                isFetching = false;
+                $loading.style.display = 'none';
+                $fetchingMore.style.display = 'none';
+
+                setToCache(p, m, currentPage, data);
+                processResponseData(data);
+            })
+            .catch(function(err) {
+                isFetching = false;
+                $loading.style.display = 'none';
+                $fetchingMore.style.display = 'none';
+
+                if (err.message.indexOf('RATE_LIMIT:') === 0) {
+                    var secs = err.message.split(':')[1];
+                    $error.innerHTML = '<span class="material-symbols-outlined" style="vertical-align:text-bottom;margin-right:6px">warning</span>' +
+                        '<strong>GitHub Rate Limit Exceeded.</strong> Please wait <strong>' + secs + 's</strong> for the limit to reset, or click "GitHub Token (Optional)" above to add a token.';
+                    $error.classList.add('warning');
+                } else {
+                    $error.textContent = 'Failed to fetch: ' + err.message;
+                    $error.classList.remove('warning');
+                }
+                $error.style.display = 'block';
+            });
+    }
+
+    function processResponseData(data) {
+        if (data.total_count === 0 && allRepos.length === 0) {
+            $error.textContent = 'No repositories found for the selected criteria.';
+            $error.style.display = 'block';
+            return;
+        }
+
+        allRepos = allRepos.concat(data.items || []);
+        hasMore = allRepos.length < Math.min(data.total_count, 1000) && (data.items || []).length === perPage;
+        render();
+    }
+
+    function loadMore() {
+        $fetchingMore.style.display = 'block';
+        $loadMoreWrap.style.display = 'none';
+        fetchNextPage();
+    }
+
+    function render() {
+        var metric = currentQuery.metric;
+        var label  = metricLabel(metric);
+        var icon   = metricIcon(metric);
+
+        if (metric === 'watches') {
+            allRepos.sort(function(a, b) { return b.watchers_count - a.watchers_count; });
+        }
+
+        // Apply client-side filter input
+        var filterTerm = ($filterInput.value || '').toLowerCase().trim();
+        var filtered = allRepos;
+        if (filterTerm) {
+            filtered = allRepos.filter(function(r) {
+                return (r.name || '').toLowerCase().indexOf(filterTerm) !== -1 ||
+                       (r.description || '').toLowerCase().indexOf(filterTerm) !== -1 ||
+                       (r.owner.login || '').toLowerCase().indexOf(filterTerm) !== -1;
+            });
+        }
+
+        var visible   = filtered.slice(0, targetCount);
+        var needsMore = allRepos.length < targetCount && hasMore && !filterTerm;
+
+        // ── Podium ──
+        $podium.innerHTML = '';
+        var top3 = visible.slice(0, 3);
+        for (var i = 0; i < top3.length; i++) {
+            var repo = top3[i];
+            var val  = metricVal(repo, metric);
+            var card = document.createElement('div');
+            card.className = 'podium-card';
+            card.setAttribute('data-rank', String(i + 1));
+            card.innerHTML =
+                '<div class="podium-medal">' + MEDALS[i] + '</div>' +
+                '<img class="podium-avatar" src="' + esc(repo.owner.avatar_url) + '" alt="">' +
+                '<div class="podium-name"><a href="' + esc(repo.html_url) + '" target="_blank" rel="noopener" title="' + esc(repo.full_name) + '">' + esc(repo.name) + '</a></div>' +
+                '<div class="podium-desc">' + esc(repo.description || 'No description') + '</div>' +
+                '<div class="podium-stat">' + fmt(val) + '</div>' +
+                '<div class="podium-stat-label">' + esc(label) + '</div>' +
+                '<div class="podium-extra-stats">' +
+                    '<span><span class="material-symbols-outlined" style="font-size:16px;">star</span> ' + fmt(repo.stargazers_count) + '</span> &middot; ' +
+                    '<span><span class="material-symbols-outlined" style="font-size:16px;">fork_right</span> ' + fmt(repo.forks_count) + '</span>' +
+                '</div>';
+            $podium.appendChild(card);
+        }
+
+        // ── List (4+) ──
+        $repoList.innerHTML = '';
+        var rest = visible.slice(3);
+        for (var j = 0; j < rest.length; j++) {
+            var r    = rest[j];
+            var rank = j + 4;
+            var row  = document.createElement('div');
+            row.className = 'repo-row';
+
+            var langBit = r.language ? esc(r.language) + ' &middot; ' : '';
+
+            row.innerHTML =
+                '<div class="rank-badge">' + rank + '</div>' +
+                '<img class="repo-avatar" src="' + esc(r.owner.avatar_url) + '" alt="">' +
+                '<div class="repo-body">' +
+                    '<div class="repo-title"><a href="' + esc(r.html_url) + '" target="_blank" rel="noopener">' + esc(r.full_name) + '</a></div>' +
+                    '<div class="repo-subtitle">' + langBit + esc(r.description || 'No description') + '</div>' +
+                '</div>' +
+                '<div class="repo-metrics-breakdown">' +
+                    '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '"><span class="material-symbols-outlined">star</span> ' + fmt(r.stargazers_count) + '</div>' +
+                    '<div class="metric-chip ' + (metric === 'forks' ? 'active' : '') + '"><span class="material-symbols-outlined">fork_right</span> ' + fmt(r.forks_count) + '</div>' +
+                    '<div class="metric-chip ' + (metric === 'watches' ? 'active' : '') + '"><span class="material-symbols-outlined">visibility</span> ' + fmt(r.watchers_count) + '</div>' +
+                '</div>';
+            $repoList.appendChild(row);
+        }
+
+        $results.style.display = 'block';
+
+        if (needsMore) {
+            loadMore();
+        } else if (hasMore && !filterTerm) {
+            $loadMoreWrap.style.display = 'block';
+        } else {
+            $loadMoreWrap.style.display = 'none';
+        }
+    }
+
+    // Initialize API rate limit check & auto-fetch top 20 on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkRateLimit();
+        startFetch(true);
+    });
+    // If DOM is already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        checkRateLimit();
+        startFetch(true);
+    }
+})();
+</script>
+</body>
+</html>

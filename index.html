@@ -480,6 +480,12 @@
             color: var(--md-on-surface-variant);
             white-space: nowrap;
         }
+        .podium-delta {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 12px;
+            margin-left: 2px;
+        }
         .podium-extra-stats span { display: inline-flex; align-items: center; gap: 4px; }
 
         /* ─── Repo List (M3 List) ─── */
@@ -1069,9 +1075,13 @@
 
             // Construct footer only showing the 2 non-selected metrics to avoid duplication
             var extraHtml = '';
-            var sFmt = ICON_STAR + ' ' + fmt(repo.stargazers_count);
-            var fFmt = ICON_FORK + ' ' + fmt(repo.forks_count);
-            var iFmt = ICON_ISSUE + ' ' + fmt(repo.open_issues_count || 0);
+            var sD = getMetricDelta(repo, 'stars');
+            var fD = getMetricDelta(repo, 'forks');
+            var iD = getMetricDelta(repo, 'issues');
+
+            var sFmt = ICON_STAR + ' ' + fmt(repo.stargazers_count) + (sD ? ' <b class="podium-delta">' + sD + '</b>' : '');
+            var fFmt = ICON_FORK + ' ' + fmt(repo.forks_count) + (fD ? ' <b class="podium-delta">' + fD + '</b>' : '');
+            var iFmt = ICON_ISSUE + ' ' + fmt(repo.open_issues_count || 0) + (iD ? ' <b class="podium-delta">' + iD + '</b>' : '');
 
             if (metric === 'stars') {
                 extraHtml = '<span>' + fFmt + '</span> &middot; <span>' + iFmt + '</span>';

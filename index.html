@@ -856,8 +856,11 @@
         return d.toISOString().split('T')[0];
     }
     function isNewRepo(created_at) {
-        var diff = Date.now() - new Date(created_at).getTime();
-        return diff < 7 * 24 * 60 * 60 * 1000;
+        if (!created_at) return false;
+        var period = currentQuery.period || 'week';
+        var maxDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 90));
+        var ageMs = Date.now() - new Date(created_at).getTime();
+        return ageMs > 0 && ageMs <= (maxDays * 24 * 60 * 60 * 1000);
     }
     function esc(s) {
         var d = document.createElement('div');

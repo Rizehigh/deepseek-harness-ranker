@@ -53,12 +53,14 @@
             --md-outline:            #938F99;
             --md-outline-variant:    #49454F;
 
-            /* Error & Warning */
+            /* Error & Warning & Accents */
             --md-error:              #F2B8B5;
             --md-error-container:    #601410;
             --md-on-error-container: #F9DEDC;
             --md-warning-container:  #3E2D04;
             --md-on-warning-container:#FFE088;
+            --accent-green:          #4EFEAA;
+            --accent-green-bg:       #003820;
 
             /* Podium rank accents */
             --podium-gold:    #FFD700;
@@ -95,12 +97,11 @@
         }
 
         .container {
-            max-width: 1060px;
+            max-width: 1080px;
             margin: 0 auto;
-            padding: 56px 24px;
+            padding: 48px 24px;
         }
 
-        /* Inline SVG Icon Base */
         .icon {
             display: inline-block;
             width: 1em;
@@ -114,7 +115,7 @@
         /* ─── Header ─── */
         .header {
             text-align: center;
-            margin-bottom: 36px;
+            margin-bottom: 32px;
         }
         .header h1 {
             font-family: var(--font-head);
@@ -128,8 +129,41 @@
             font-size: 19px;
             font-weight: 500;
             color: var(--md-on-surface-variant);
-            margin-top: 10px;
+            margin-top: 8px;
             line-height: 1.5;
+        }
+
+        /* ─── Category Filter Chips ─── */
+        .category-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .chip {
+            padding: 8px 18px;
+            border-radius: var(--md-shape-full);
+            background: var(--md-surface-container-high);
+            color: var(--md-on-surface-variant);
+            font-family: var(--font-head);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all var(--md-motion-duration-short);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chip:hover {
+            background: var(--md-surface-container-highest);
+            color: var(--md-on-surface);
+        }
+        .chip.active {
+            background: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+            border-color: var(--md-primary);
         }
 
         /* ─── API Limit Chip Bar ─── */
@@ -164,7 +198,7 @@
             text-underline-offset: 3px;
         }
 
-        /* ─── Token drawer ─── */
+        /* Token drawer */
         .token-drawer {
             display: none;
             background: var(--md-surface-container-high);
@@ -203,9 +237,9 @@
             gap: 20px;
             justify-content: center;
             align-items: flex-end;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             background: var(--md-surface-container);
-            padding: 28px 32px;
+            padding: 24px 32px;
             border-radius: var(--md-shape-md);
         }
         .control-group {
@@ -223,9 +257,8 @@
             padding-left: 2px;
         }
 
-        /* Selects */
         .controls select, .controls input[type="text"] {
-            padding: 14px 44px 14px 18px;
+            padding: 12px 40px 12px 18px;
             border: 1px solid var(--md-outline);
             border-radius: var(--md-shape-xs);
             font-size: 17px;
@@ -241,7 +274,7 @@
             background-repeat: no-repeat;
             background-position: right 12px center;
             min-width: 170px;
-            transition: border-color var(--md-motion-duration-short) var(--md-motion-easing-standard);
+            transition: border-color var(--md-motion-duration-short);
         }
         .controls select option {
             background-color: #2B2930;
@@ -249,19 +282,12 @@
             padding: 12px;
             font-size: 16px;
         }
-        .controls select:hover, .controls input[type="text"]:hover {
-            border-color: var(--md-on-surface);
-        }
-        .controls select:focus, .controls input[type="text"]:focus {
-            outline: none;
-            border-color: var(--md-primary);
-            border-width: 2px;
-            padding: 13px 43px 13px 17px;
-        }
+        .controls select:hover { border-color: var(--md-on-surface); }
+        .controls select:focus { outline: none; border-color: var(--md-primary); border-width: 2px; }
 
-        /* Quick Filter Bar */
+        /* Search Filter Input */
         .filter-bar {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
             display: flex;
             gap: 12px;
         }
@@ -279,52 +305,26 @@
             background-position: 16px center;
             transition: border-color var(--md-motion-duration-short);
         }
-        .filter-bar input:focus {
-            outline: none;
-            border-color: var(--md-primary);
-        }
+        .filter-bar input:focus { outline: none; border-color: var(--md-primary); }
 
-        /* Buttons */
         #fetchBtn {
-            padding: 14px 32px;
+            padding: 12px 32px;
             border: none;
             border-radius: var(--md-shape-full);
             font-size: 17px;
             font-weight: 700;
             font-family: var(--font-head);
-            letter-spacing: 0.2px;
             cursor: pointer;
             background: var(--md-secondary-container);
             color: var(--md-on-secondary-container);
-            transition: box-shadow var(--md-motion-duration-short) var(--md-motion-easing-standard),
-                        background var(--md-motion-duration-short) var(--md-motion-easing-standard);
-            position: relative;
-            overflow: hidden;
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            height: 54px;
+            height: 50px;
         }
-        #fetchBtn:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-        }
-        #fetchBtn:active {
-            box-shadow: none;
-        }
-        #fetchBtn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: var(--md-on-secondary-container);
-            opacity: 0;
-            transition: opacity var(--md-motion-duration-short);
-            pointer-events: none;
-        }
-        #fetchBtn:hover::after { opacity: 0.08; }
-        #fetchBtn:active::after { opacity: 0.12; }
+        #fetchBtn:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
 
-        /* ─── Loading (M3 Circular Indicator) ─── */
+        /* ─── Loading & Error ─── */
         #loading {
             text-align: center;
             padding: 80px 24px;
@@ -344,7 +344,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ─── Error (M3 Error Container) ─── */
         #error {
             text-align: center;
             padding: 22px 32px;
@@ -356,15 +355,9 @@
             font-size: 16px;
             line-height: 1.5;
         }
-        #error.warning {
-            color: var(--md-on-warning-container);
-            background: var(--md-warning-container);
-        }
 
         /* ─── Podium Section ─── */
-        .podium-section {
-            margin-bottom: 28px;
-        }
+        .podium-section { margin-bottom: 28px; }
         .podium {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -383,13 +376,10 @@
             flex-direction: column;
             align-items: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 10px 1px rgba(0,0,0,0.15);
-            transition: box-shadow var(--md-motion-duration-medium) var(--md-motion-easing-standard);
+            transition: box-shadow var(--md-motion-duration-medium);
         }
-        .podium-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 8px 20px 2px rgba(0,0,0,0.25);
-        }
+        .podium-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 8px 20px 2px rgba(0,0,0,0.25); }
 
-        /* Podium order: 🥈 | 🥇 | 🥉 */
         .podium-card[data-rank="1"] { order: 2; }
         .podium-card[data-rank="2"] { order: 1; }
         .podium-card[data-rank="3"] { order: 3; }
@@ -404,17 +394,21 @@
         .podium-card[data-rank="2"]::before { background: var(--podium-silver); }
         .podium-card[data-rank="3"]::before { background: var(--podium-bronze); }
 
-        .podium-medal {
-            font-size: 42px;
-            margin-bottom: 16px;
-            line-height: 1;
+        .podium-badge-new {
+            position: absolute;
+            top: 14px; right: 14px;
+            background: var(--accent-green-bg);
+            color: var(--accent-green);
+            font-family: var(--font-code);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--md-shape-xs);
+            letter-spacing: 0.5px;
         }
-        .podium-avatar {
-            width: 72px; height: 72px;
-            border-radius: var(--md-shape-full);
-            object-fit: cover;
-            margin-bottom: 16px;
-        }
+
+        .podium-medal { font-size: 42px; margin-bottom: 16px; line-height: 1; }
+        .podium-avatar { width: 72px; height: 72px; border-radius: var(--md-shape-full); object-fit: cover; margin-bottom: 16px; }
         .podium-card[data-rank="1"] .podium-avatar { width: 88px; height: 88px; }
 
         .podium-name {
@@ -426,12 +420,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
-            line-height: 1.3;
         }
-        .podium-name a {
-            text-decoration: none;
-            color: inherit;
-        }
+        .podium-name a { text-decoration: none; color: inherit; }
         .podium-name a:hover { color: var(--md-primary); }
 
         .podium-desc {
@@ -468,7 +458,6 @@
             margin-top: 4px;
         }
 
-        /* Additional Stats breakdown on podium cards */
         .podium-extra-stats {
             display: flex;
             align-items: center;
@@ -478,11 +467,7 @@
             font-size: 14px;
             color: var(--md-on-surface-variant);
         }
-        .podium-extra-stats span {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
+        .podium-extra-stats span { display: inline-flex; align-items: center; gap: 4px; }
 
         /* ─── Repo List (M3 List) ─── */
         .list-section {
@@ -494,30 +479,26 @@
 
         .repo-row {
             display: grid;
-            grid-template-columns: 48px 52px 1fr auto;
+            grid-template-columns: 56px 52px 1fr auto;
             gap: 20px;
             align-items: center;
             padding: 20px 32px 20px 24px;
-            min-height: 80px;
+            min-height: 84px;
             position: relative;
-            transition: background var(--md-motion-duration-short) var(--md-motion-easing-standard);
+            transition: background var(--md-motion-duration-short);
         }
-        .repo-row + .repo-row {
-            border-top: 1px solid var(--md-outline-variant);
-        }
-        .repo-row::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--md-on-surface);
-            opacity: 0;
-            transition: opacity var(--md-motion-duration-short);
-            pointer-events: none;
-        }
-        .repo-row:hover::after { opacity: 0.08; }
+        .repo-row + .repo-row { border-top: 1px solid var(--md-outline-variant); }
+        .repo-row:hover { background: rgba(208, 188, 255, 0.04); }
 
+        .rank-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
         .rank-badge {
-            width: 42px; height: 42px;
+            width: 40px; height: 40px;
             border-radius: var(--md-shape-full);
             display: flex;
             align-items: center;
@@ -527,17 +508,25 @@
             font-weight: 700;
             background: var(--md-surface-container-highest);
             color: var(--md-on-surface-variant);
-            flex-shrink: 0;
         }
+        .tag-badge-new {
+            background: var(--accent-green-bg);
+            color: var(--accent-green);
+            font-family: var(--font-code);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: var(--md-shape-xs);
+            letter-spacing: 0.5px;
+        }
+
         .repo-avatar {
             width: 50px; height: 50px;
             border-radius: var(--md-shape-full);
             object-fit: cover;
             flex-shrink: 0;
         }
-        .repo-body {
-            min-width: 0;
-        }
+        .repo-body { min-width: 0; }
         .repo-title {
             font-size: 18px;
             font-weight: 700;
@@ -546,12 +535,13 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .repo-title a {
-            text-decoration: none;
-            color: var(--md-primary);
-        }
+        .repo-title a { text-decoration: none; color: var(--md-primary); }
         .repo-title a:hover { text-decoration: underline; }
+
         .repo-subtitle {
             font-size: 15px;
             line-height: 1.45;
@@ -576,17 +566,10 @@
             gap: 6px;
             color: var(--md-on-surface-variant);
         }
-        .metric-chip.active {
-            color: var(--md-primary);
-            font-weight: 700;
-        }
+        .metric-chip.active { color: var(--md-primary); font-weight: 700; }
 
-        /* ─── Load More (M3 Outlined Button) ─── */
-        .load-more-wrap {
-            text-align: center;
-            padding: 32px;
-            display: none;
-        }
+        /* ─── Load More ─── */
+        .load-more-wrap { text-align: center; padding: 32px; display: none; }
         .load-more-wrap button {
             padding: 14px 36px;
             border: 1.5px solid var(--md-outline);
@@ -594,81 +577,28 @@
             font-size: 16px;
             font-weight: 700;
             font-family: var(--font-head);
-            letter-spacing: 0.2px;
             cursor: pointer;
             background: transparent;
             color: var(--md-primary);
-            position: relative;
-            overflow: hidden;
-            transition: border-color var(--md-motion-duration-short);
-        }
-        .load-more-wrap button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: var(--md-primary);
-            opacity: 0;
-            transition: opacity var(--md-motion-duration-short);
-            pointer-events: none;
-        }
-        .load-more-wrap button:hover::after { opacity: 0.08; }
-        .load-more-wrap button:active::after { opacity: 0.12; }
-
-        .fetching-more {
-            text-align: center;
-            padding: 24px;
-            color: var(--md-on-surface-variant);
-            font-size: 15px;
-            display: none;
         }
 
-        /* ─── Empty State ─── */
-        .empty-state {
-            text-align: center;
-            padding: 110px 24px;
-            color: var(--md-on-surface-variant);
-            font-size: 18px;
-            line-height: 1.6;
-        }
-        .empty-state-icon {
-            margin-bottom: 24px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        .fetching-more { text-align: center; padding: 24px; color: var(--md-on-surface-variant); font-size: 15px; display: none; }
 
-        /* ─── Responsive ─── */
+        .empty-state { text-align: center; padding: 110px 24px; color: var(--md-on-surface-variant); font-size: 18px; line-height: 1.6; }
+        .empty-state-icon { margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto; }
+
         @media (max-width: 768px) {
             .container { padding: 32px 16px; }
             .header h1 { font-size: 32px; }
-            .podium {
-                grid-template-columns: 1fr;
-                gap: 14px;
-            }
-            .podium-card[data-rank="1"],
-            .podium-card[data-rank="2"],
-            .podium-card[data-rank="3"] { order: unset; }
-            .podium-card {
-                flex-direction: row;
-                text-align: left;
-                padding: 24px;
-                gap: 20px;
-            }
+            .podium { grid-template-columns: 1fr; gap: 14px; }
+            .podium-card[data-rank="1"], .podium-card[data-rank="2"], .podium-card[data-rank="3"] { order: unset; }
+            .podium-card { flex-direction: row; text-align: left; padding: 24px; gap: 20px; }
             .podium-medal { font-size: 32px; margin-bottom: 0; }
             .podium-avatar { width: 60px; height: 60px; margin-bottom: 0; }
             .podium-card[data-rank="1"] .podium-avatar { width: 60px; height: 60px; }
             .podium-desc { height: auto; margin-bottom: 8px; }
-            .repo-row {
-                grid-template-columns: 36px 44px 1fr;
-                gap: 14px;
-                padding: 16px;
-            }
-            .repo-metrics-breakdown {
-                grid-column: 1 / -1;
-                justify-content: flex-end;
-                margin-top: 4px;
-            }
+            .repo-row { grid-template-columns: 44px 44px 1fr; gap: 14px; padding: 16px; }
+            .repo-metrics-breakdown { grid-column: 1 / -1; justify-content: flex-end; margin-top: 4px; }
         }
     </style>
 </head>
@@ -676,7 +606,16 @@
     <div class="container">
         <div class="header">
             <h1>GitHub Ranker</h1>
-            <p>Top repositories related to DeepSeek Harness</p>
+            <p>Discover and compare open-source repositories built around DeepSeek Harness</p>
+        </div>
+
+        <!-- Category / Filter Pills -->
+        <div class="category-chips" id="categoryChips">
+            <button class="chip active" data-cat="all">All Repositories</button>
+            <button class="chip" data-cat="agent">Agents & Swarms</button>
+            <button class="chip" data-cat="harness">Harness & SDKs</button>
+            <button class="chip" data-cat="benchmark">Evals & Benchmarks</button>
+            <button class="chip" data-cat="under1k">Emerging (&lt;1k Stars)</button>
         </div>
 
         <!-- API Rate Limit & Token Status Bar -->
@@ -764,6 +703,7 @@
     var hasMore = false;
     var isFetching = false;
     var currentQuery = {};
+    var activeCategory = 'all';
 
     var $loading      = document.getElementById('loading');
     var $error        = document.getElementById('error');
@@ -797,23 +737,28 @@
         checkRateLimit();
     });
 
+    // Category chips click listeners
+    var $chips = document.querySelectorAll('.category-chips .chip');
+    $chips.forEach(function(c) {
+        c.addEventListener('click', function() {
+            $chips.forEach(function(ch) { ch.classList.remove('active'); });
+            c.classList.add('active');
+            activeCategory = c.getAttribute('data-cat');
+            render();
+        });
+    });
+
     document.getElementById('fetchBtn').addEventListener('click', function() { startFetch(); });
     $loadMoreBtn.addEventListener('click', loadMore);
     $filterInput.addEventListener('input', function() { render(); });
 
     var MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
 
-    // Crisp, instant inline SVGs
     var ICON_STAR = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
     var ICON_FORK = '<svg class="icon" viewBox="0 0 24 24"><path d="M13 14v-3c0-1.66-1.34-3-3-3H9V6.2c.7-.38 1.17-1.12 1.17-1.97C10.17 3.01 9.16 2 7.93 2c-1.23 0-2.24 1.01-2.24 2.23 0 .85.47 1.59 1.17 1.97V18c-1.1 0-2-.9-2-2v-3H3v3c0 2.21 1.79 4 4 4h5.2c.38.7 1.12 1.17 1.97 1.17 1.23 0 2.23-1.01 2.23-2.23 0-.85-.47-1.59-1.17-1.97zm-5.07-9.8c0-.66.54-1.2 1.2-1.2s1.2.54 1.2 1.2-.54 1.2-1.2 1.2-1.2-.54-1.2-1.2zm6.27 15c0 .66-.54 1.2-1.2 1.2s-1.2-.54-1.2-1.2.54-1.2 1.2-1.2 1.2.54 1.2 1.2zM21 7.5a3.5 3.5 0 0 0-3.5-3.5H16v2h1.5A1.5 1.5 0 0 1 19 7.5V11h2V7.5z"/></svg>';
     var ICON_EYE  = '<svg class="icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
     var ICON_WARN = '<svg class="icon" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>';
 
-    function metricIconSvg(m) {
-        if (m === 'stars') return ICON_STAR;
-        if (m === 'forks') return ICON_FORK;
-        return ICON_EYE;
-    }
     function metricVal(repo, m) {
         if (m === 'stars') return repo.stargazers_count;
         if (m === 'forks') return repo.forks_count;
@@ -838,6 +783,10 @@
         }
         return d.toISOString().split('T')[0];
     }
+    function isNewRepo(created_at) {
+        var diff = Date.now() - new Date(created_at).getTime();
+        return diff < 7 * 24 * 60 * 60 * 1000;
+    }
     function esc(s) {
         var d = document.createElement('div');
         d.appendChild(document.createTextNode(s));
@@ -861,7 +810,6 @@
             }).catch(function() {});
     }
 
-    // ── Cache helper (5 min TTL) ──
     function getCacheKey(p, m, page) {
         return 'gh_ranker_cache_' + p + '_' + m + '_' + page;
     }
@@ -988,10 +936,22 @@
             allRepos.sort(function(a, b) { return b.watchers_count - a.watchers_count; });
         }
 
+        // Apply Category Pills Filter
+        var categoryFiltered = allRepos.filter(function(r) {
+            var text = ((r.name || '') + ' ' + (r.description || '')).toLowerCase();
+            if (activeCategory === 'agent') return text.indexOf('agent') !== -1 || text.indexOf('swarm') !== -1;
+            if (activeCategory === 'harness') return text.indexOf('harness') !== -1 || text.indexOf('sdk') !== -1;
+            if (activeCategory === 'benchmark') return text.indexOf('bench') !== -1 || text.indexOf('eval') !== -1;
+            if (activeCategory === 'under1k') return r.stargazers_count < 1000;
+            if (activeCategory === 'newThisWeek') return isNewRepo(r.created_at);
+            return true;
+        });
+
+        // Apply Search Bar Filter
         var filterTerm = ($filterInput.value || '').toLowerCase().trim();
-        var filtered = allRepos;
+        var filtered = categoryFiltered;
         if (filterTerm) {
-            filtered = allRepos.filter(function(r) {
+            filtered = categoryFiltered.filter(function(r) {
                 return (r.name || '').toLowerCase().indexOf(filterTerm) !== -1 ||
                        (r.description || '').toLowerCase().indexOf(filterTerm) !== -1 ||
                        (r.owner.login || '').toLowerCase().indexOf(filterTerm) !== -1;
@@ -999,7 +959,7 @@
         }
 
         var visible   = filtered.slice(0, targetCount);
-        var needsMore = allRepos.length < targetCount && hasMore && !filterTerm;
+        var needsMore = allRepos.length < targetCount && hasMore && !filterTerm && activeCategory === 'all';
 
         // ── Podium ──
         $podium.innerHTML = '';
@@ -1010,7 +970,11 @@
             var card = document.createElement('div');
             card.className = 'podium-card';
             card.setAttribute('data-rank', String(i + 1));
+            
+            var newTag = isNewRepo(repo.created_at) ? '<div class="podium-badge-new">New</div>' : '';
+
             card.innerHTML =
+                newTag +
                 '<div class="podium-medal">' + MEDALS[i] + '</div>' +
                 '<img class="podium-avatar" src="' + esc(repo.owner.avatar_url) + '" alt="">' +
                 '<div class="podium-name"><a href="' + esc(repo.html_url) + '" target="_blank" rel="noopener" title="' + esc(repo.full_name) + '">' + esc(repo.name) + '</a></div>' +
@@ -1034,9 +998,10 @@
             row.className = 'repo-row';
 
             var langBit = r.language ? esc(r.language) + ' &middot; ' : '';
+            var newBadge = isNewRepo(r.created_at) ? '<div class="tag-badge-new">New</div>' : '';
 
             row.innerHTML =
-                '<div class="rank-badge">' + rank + '</div>' +
+                '<div class="rank-col"><div class="rank-badge">' + rank + '</div>' + newBadge + '</div>' +
                 '<img class="repo-avatar" src="' + esc(r.owner.avatar_url) + '" alt="">' +
                 '<div class="repo-body">' +
                     '<div class="repo-title"><a href="' + esc(r.html_url) + '" target="_blank" rel="noopener">' + esc(r.full_name) + '</a></div>' +
@@ -1054,7 +1019,7 @@
 
         if (needsMore) {
             loadMore();
-        } else if (hasMore && !filterTerm) {
+        } else if (hasMore && !filterTerm && activeCategory === 'all') {
             $loadMoreWrap.style.display = 'block';
         } else {
             $loadMoreWrap.style.display = 'none';

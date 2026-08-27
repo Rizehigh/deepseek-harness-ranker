@@ -1056,10 +1056,16 @@
                 '<div class="podium-desc">' + esc(repo.description || 'No description') + '</div>' +
                 '<div class="podium-stat">' + fmt(val) + '</div>' +
                 '<div class="podium-stat-label">' + esc(label) + (getMetricDelta(repo, metric) ? ' <span style="color:var(--accent-green);font-weight:700;">(' + getMetricDelta(repo, metric) + ')</span>' : '') + '</div>' +
-                '<div class="podium-extra-stats">' +
-                    '<span>' + ICON_STAR + ' ' + fmt(repo.stargazers_count) + '</span> &middot; ' +
-                    '<span>' + ICON_FORK + ' ' + fmt(repo.forks_count) + '</span>' +
-                '</div>';
+                (function() {
+                    var sD = getMetricDelta(repo, 'stars');
+                    var fD = getMetricDelta(repo, 'forks');
+                    var wD = getMetricDelta(repo, 'watches');
+                    return '<div class="podium-extra-stats">' +
+                        '<span>' + ICON_STAR + ' ' + fmt(repo.stargazers_count) + (sD ? ' <b style="color:var(--accent-green)">(' + sD + ')</b>' : '') + '</span> &middot; ' +
+                        '<span>' + ICON_FORK + ' ' + fmt(repo.forks_count) + (fD ? ' <b style="color:var(--accent-green)">(' + fD + ')</b>' : '') + '</span> &middot; ' +
+                        '<span>' + ICON_EYE + ' ' + fmt(repo.watchers_count) + (wD ? ' <b style="color:var(--accent-green)">(' + wD + ')</b>' : '') + '</span>' +
+                    '</div>';
+                })();
             $podium.appendChild(card);
         }
 
@@ -1083,9 +1089,14 @@
                     '<div class="repo-subtitle">' + langBit + esc(r.description || 'No description') + '</div>' +
                 '</div>' +
                 '<div class="repo-metrics-breakdown">' +
-                    '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '">' + ICON_STAR + ' ' + fmt(r.stargazers_count) + (getMetricDelta(r, 'stars') ? ' <span style="color:var(--accent-green);font-size:12px;margin-left:2px;">' + getMetricDelta(r, 'stars') + '</span>' : '') + '</div>' +
-                    '<div class="metric-chip ' + (metric === 'forks' ? 'active' : '') + '">' + ICON_FORK + ' ' + fmt(r.forks_count) + '</div>' +
-                    '<div class="metric-chip ' + (metric === 'watches' ? 'active' : '') + '">' + ICON_EYE + ' ' + fmt(r.watchers_count) + '</div>' +
+                    (function() {
+                    var sDelta = getMetricDelta(r, 'stars');
+                    var fDelta = getMetricDelta(r, 'forks');
+                    var wDelta = getMetricDelta(r, 'watches');
+                    return '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '">' + ICON_STAR + ' ' + fmt(r.stargazers_count) + (sDelta ? ' <span style="color:var(--accent-green);font-size:12px;margin-left:2px;">' + sDelta + '</span>' : '') + '</div>' +
+                           '<div class="metric-chip ' + (metric === 'forks' ? 'active' : '') + '">' + ICON_FORK + ' ' + fmt(r.forks_count) + (fDelta ? ' <span style="color:var(--accent-green);font-size:12px;margin-left:2px;">' + fDelta + '</span>' : '') + '</div>' +
+                           '<div class="metric-chip ' + (metric === 'watches' ? 'active' : '') + '">' + ICON_EYE + ' ' + fmt(r.watchers_count) + (wDelta ? ' <span style="color:var(--accent-green);font-size:12px;margin-left:2px;">' + wDelta + '</span>' : '') + '</div>';
+                })() +
                 '</div>';
             $repoList.appendChild(row);
         }

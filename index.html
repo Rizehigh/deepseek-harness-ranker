@@ -758,6 +758,48 @@
     var ICON_EYE  = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
     var ICON_WARN = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>';
 
+    // ── Local Snapshot Storage for Delta Tracking ──
+    function saveSnapshot(repos) {
+        try {
+            var today = new Date().toISOString().split('T')[0];
+            var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
+            if (!store[today]) store[today] = {};
+            repos.forEach(function(r) {
+                store[today][r.full_name] = { s: r.stargazers_count, f: r.forks_count, w: r.watchers_count };
+            });
+            // Keep max 14 days history
+            var keys = Object.keys(store).sort();
+            if (keys.length > 14) {
+                delete store[keys[0]];
+            }
+            localStorage.setItem('gh_ranker_history', JSON.stringify(store));
+        } catch(e) {}
+    }
+
+    function getMetricDelta(repo, m) {
+        try {
+            var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
+            var dates = Object.keys(store).sort();
+            if (dates.length < 2) {
+                // If newly created within target period, total count is the period gain!
+                if (isNewRepo(repo.created_at)) return '+' + fmt(metricVal(repo, m));
+                return null;
+            }
+            var oldestDate = dates[0];
+            var pastRecord = store[oldestDate][repo.full_name];
+            if (!pastRecord) {
+                if (isNewRepo(repo.created_at)) return '+' + fmt(metricVal(repo, m));
+                return null;
+            }
+            var current = metricVal(repo, m);
+            var past = m === 'stars' ? pastRecord.s : (m === 'forks' ? pastRecord.f : pastRecord.w);
+            var diff = current - past;
+            if (diff > 0) return '+' + fmt(diff);
+            if (diff < 0) return '-' + fmt(Math.abs(diff));
+            return null;
+        } catch(e) { return null; }
+    }
+
     function metricVal(repo, m) {
         if (m === 'stars') return repo.stargazers_count;
         if (m === 'forks') return repo.forks_count;
@@ -890,6 +932,7 @@
                 $fetchingMore.style.display = 'none';
 
                 setToCache(p, m, currentPage, data);
+                saveSnapshot(data.items || []);
                 processResponseData(data);
             })
             .catch(function(err) {
@@ -978,7 +1021,7 @@
                 '<div class="podium-name"><a href="' + esc(repo.html_url) + '" target="_blank" rel="noopener" title="' + esc(repo.full_name) + '">' + esc(repo.name) + '</a></div>' +
                 '<div class="podium-desc">' + esc(repo.description || 'No description') + '</div>' +
                 '<div class="podium-stat">' + fmt(val) + '</div>' +
-                '<div class="podium-stat-label">' + esc(label) + '</div>' +
+                '<div class="podium-stat-label">' + esc(label) + (getMetricDelta(repo, metric) ? ' <span style="color:var(--accent-green);font-weight:700;">(' + getMetricDelta(repo, metric) + ')</span>' : '') + '</div>' +
                 '<div class="podium-extra-stats">' +
                     '<span>' + ICON_STAR + ' ' + fmt(repo.stargazers_count) + '</span> &middot; ' +
                     '<span>' + ICON_FORK + ' ' + fmt(repo.forks_count) + '</span>' +
@@ -1006,7 +1049,7 @@
                     '<div class="repo-subtitle">' + langBit + esc(r.description || 'No description') + '</div>' +
                 '</div>' +
                 '<div class="repo-metrics-breakdown">' +
-                    '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '">' + ICON_STAR + ' ' + fmt(r.stargazers_count) + '</div>' +
+                    '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '">' + ICON_STAR + ' ' + fmt(r.stargazers_count) + (getMetricDelta(r, 'stars') ? ' <span style="color:var(--accent-green);font-size:12px;margin-left:2px;">' + getMetricDelta(r, 'stars') + '</span>' : '') + '</div>' +
                     '<div class="metric-chip ' + (metric === 'forks' ? 'active' : '') + '">' + ICON_FORK + ' ' + fmt(r.forks_count) + '</div>' +
                     '<div class="metric-chip ' + (metric === 'watches' ? 'active' : '') + '">' + ICON_EYE + ' ' + fmt(r.watchers_count) + '</div>' +
                 '</div>';

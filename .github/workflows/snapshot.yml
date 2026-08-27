@@ -54,7 +54,7 @@ jobs:
               todayData[r.full_name] = {
                 stars: r.stargazers_count,
                 forks: r.forks_count,
-                watchers: r.watchers_count
+                issues: r.open_issues_count || 0
               };
             });
 

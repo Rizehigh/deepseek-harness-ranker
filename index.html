@@ -660,7 +660,7 @@
                 <select id="metric">
                     <option value="stars" selected>Stars</option>
                     <option value="forks">Forks</option>
-                    <option value="watches">Watchers</option>
+                    <option value="issues">Open Issues</option>
                 </select>
             </div>
             <div class="control-group">
@@ -777,20 +777,20 @@
 
     var MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
 
-    var ICON_STAR = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
-    var ICON_FORK = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>';
-    var ICON_EYE  = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
+    var ICON_STAR  = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
+    var ICON_FORK  = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>';
+    var ICON_ISSUE = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>';
     var ICON_WARN = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>';
 
     function metricVal(repo, m) {
         if (m === 'stars') return repo.stargazers_count;
         if (m === 'forks') return repo.forks_count;
-        return repo.watchers_count;
+        return repo.open_issues_count || 0;
     }
     function metricLabel(m) {
         if (m === 'stars') return 'Stars';
         if (m === 'forks') return 'Forks';
-        return 'Watchers';
+        return 'Open Issues';
     }
     function fmt(n) {
         if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -854,7 +854,7 @@
             var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
             if (!store[today]) store[today] = {};
             repos.forEach(function(r) {
-                store[today][r.full_name] = { s: r.stargazers_count, f: r.forks_count, w: r.watchers_count };
+                store[today][r.full_name] = { s: r.stargazers_count, f: r.forks_count, i: r.open_issues_count || 0 };
             });
             var keys = Object.keys(store).sort();
             if (keys.length > 14) delete store[keys[0]];
@@ -876,7 +876,7 @@
                 var pastRecord = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
 
                 if (pastRecord) {
-                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : pastRecord.watchers);
+                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : (pastRecord.issues || pastRecord.watchers || 0));
                     var diff = current - pastVal;
                     if (diff > 0) return '+' + fmt(diff);
                     if (diff < 0) return '-' + fmt(Math.abs(diff));
@@ -891,7 +891,7 @@
             if (localDates.length >= 2) {
                 var pastRec = store[localDates[0]][repo.full_name];
                 if (pastRec) {
-                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : pastRec.w);
+                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : (pastRec.i || pastRec.w || 0));
                     var d = current - pVal;
                     if (d > 0) return '+' + fmt(d);
                     if (d < 0) return '-' + fmt(Math.abs(d));
@@ -957,7 +957,7 @@
         }
 
         var ds   = dateStr(p);
-        var sort = m === 'watches' ? 'updated' : m;
+        var sort = m === 'issues' ? 'help-wanted-issues' : m;
         var q    = 'deepseek-harness in:name,description,readme created:>' + ds;
         var url  = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
                  + '&sort=' + sort + '&order=desc&per_page=' + perPage + '&page=' + currentPage;
@@ -1071,12 +1071,12 @@
             var extraHtml = '';
             var sFmt = ICON_STAR + ' ' + fmt(repo.stargazers_count);
             var fFmt = ICON_FORK + ' ' + fmt(repo.forks_count);
-            var wFmt = ICON_EYE + ' ' + fmt(repo.watchers_count);
+            var iFmt = ICON_ISSUE + ' ' + fmt(repo.open_issues_count || 0);
 
             if (metric === 'stars') {
-                extraHtml = '<span>' + fFmt + '</span> &middot; <span>' + wFmt + '</span>';
+                extraHtml = '<span>' + fFmt + '</span> &middot; <span>' + iFmt + '</span>';
             } else if (metric === 'forks') {
-                extraHtml = '<span>' + sFmt + '</span> &middot; <span>' + wFmt + '</span>';
+                extraHtml = '<span>' + sFmt + '</span> &middot; <span>' + iFmt + '</span>';
             } else {
                 extraHtml = '<span>' + sFmt + '</span> &middot; <span>' + fFmt + '</span>';
             }
@@ -1110,7 +1110,7 @@
 
             var sDelta = getMetricDelta(r, 'stars');
             var fDelta = getMetricDelta(r, 'forks');
-            var wDelta = getMetricDelta(r, 'watches');
+            var iDelta = getMetricDelta(r, 'issues');
 
             row.innerHTML =
                 '<div class="rank-col"><div class="rank-badge">' + rank + '</div>' + newBadge + '</div>' +
@@ -1122,7 +1122,7 @@
                 '<div class="repo-metrics-breakdown">' +
                     '<div class="metric-chip ' + (metric === 'stars' ? 'active' : '') + '">' + ICON_STAR + ' ' + fmt(r.stargazers_count) + (sDelta ? ' <span class="metric-delta">' + sDelta + '</span>' : '') + '</div>' +
                     '<div class="metric-chip ' + (metric === 'forks' ? 'active' : '') + '">' + ICON_FORK + ' ' + fmt(r.forks_count) + (fDelta ? ' <span class="metric-delta">' + fDelta + '</span>' : '') + '</div>' +
-                    '<div class="metric-chip ' + (metric === 'watches' ? 'active' : '') + '">' + ICON_EYE + ' ' + fmt(r.watchers_count) + (wDelta ? ' <span class="metric-delta">' + wDelta + '</span>' : '') + '</div>' +
+                    '<div class="metric-chip ' + (metric === 'issues' ? 'active' : '') + '">' + ICON_ISSUE + ' ' + fmt(r.open_issues_count || 0) + (iDelta ? ' <span class="metric-delta">' + iDelta + '</span>' : '') + '</div>' +
                 '</div>';
             $repoList.appendChild(row);
         }

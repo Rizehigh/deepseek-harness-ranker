@@ -695,6 +695,7 @@
 <script>
 (function() {
     var allRepos = [];
+    var serverHistory = null;
     var currentPage = 0;
     var perPage = 30;
     var targetCount = 20;
@@ -776,28 +777,58 @@
         } catch(e) {}
     }
 
+    function loadServerHistory() {
+        fetch('./data/history.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.snapshots) {
+                    serverHistory = data.snapshots;
+                    render();
+                }
+            })
+            .catch(function() {});
+    }
+
     function getMetricDelta(repo, m) {
+        var current = metricVal(repo, m);
+        var period  = currentQuery.period || 'week';
+        
+        // 1. Try calculation from automated GitHub Action daily history
+        if (serverHistory) {
+            var dates = Object.keys(serverHistory).sort();
+            if (dates.length > 0) {
+                var targetDays = period === 'day' ? 1 : (period === 'week' ? 7 : 30);
+                var targetDateIndex = Math.max(0, dates.length - 1 - targetDays);
+                var pastDate = dates[targetDateIndex];
+                var pastRecord = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
+
+                if (pastRecord) {
+                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : pastRecord.watchers);
+                    var diff = current - pastVal;
+                    if (diff > 0) return '+' + fmt(diff);
+                    if (diff < 0) return '-' + fmt(Math.abs(diff));
+                }
+            }
+        }
+
+        // 2. Fallback to client-side localStorage snapshots
         try {
             var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
-            var dates = Object.keys(store).sort();
-            if (dates.length < 2) {
-                // If newly created within target period, total count is the period gain!
-                if (isNewRepo(repo.created_at)) return '+' + fmt(metricVal(repo, m));
-                return null;
+            var localDates = Object.keys(store).sort();
+            if (localDates.length >= 2) {
+                var pastRec = store[localDates[0]][repo.full_name];
+                if (pastRec) {
+                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : pastRec.w);
+                    var d = current - pVal;
+                    if (d > 0) return '+' + fmt(d);
+                    if (d < 0) return '-' + fmt(Math.abs(d));
+                }
             }
-            var oldestDate = dates[0];
-            var pastRecord = store[oldestDate][repo.full_name];
-            if (!pastRecord) {
-                if (isNewRepo(repo.created_at)) return '+' + fmt(metricVal(repo, m));
-                return null;
-            }
-            var current = metricVal(repo, m);
-            var past = m === 'stars' ? pastRecord.s : (m === 'forks' ? pastRecord.f : pastRecord.w);
-            var diff = current - past;
-            if (diff > 0) return '+' + fmt(diff);
-            if (diff < 0) return '-' + fmt(Math.abs(diff));
-            return null;
-        } catch(e) { return null; }
+        } catch(e) {}
+
+        // 3. Fallback for new repos created during the timeframe
+        if (isNewRepo(repo.created_at)) return '+' + fmt(current);
+        return null;
     }
 
     function metricVal(repo, m) {
@@ -1069,6 +1100,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         checkRateLimit();
+        loadServerHistory();
         startFetch();
     });
     if (document.readyState === 'complete' || document.readyState === 'interactive') {

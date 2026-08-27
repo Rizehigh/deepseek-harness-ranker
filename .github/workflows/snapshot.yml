@@ -1,0 +1,86 @@
+name: Daily Repository Stats Snapshot
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch and Record Snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e '
+          const fs = require("fs");
+          const path = "./data/history.json";
+
+          async function record() {
+            const today = new Date().toISOString().split("T")[0];
+            const q = encodeURIComponent("deepseek-harness in:name,description,readme");
+            const url = "https://api.github.com/search/repositories?q=" + q + "&sort=stars&order=desc&per_page=100";
+            
+            const headers = { "User-Agent": "GitHub-Action-Ranker" };
+            if (process.env.GH_TOKEN) {
+              headers["Authorization"] = "Bearer " + process.env.GH_TOKEN;
+            }
+
+            console.log("Fetching top repositories from GitHub API...");
+            const res = await fetch(url, { headers });
+            if (!res.ok) throw new Error("API failed with status " + res.status);
+            const data = await res.json();
+
+            let history = { updated_at: new Date().toISOString(), snapshots: {} };
+            if (fs.existsSync(path)) {
+              try { history = JSON.parse(fs.readFileSync(path, "utf8")); } catch(e) {}
+            }
+            if (!history.snapshots) history.snapshots = {};
+
+            const todayData = {};
+            (data.items || []).forEach(r => {
+              todayData[r.full_name] = {
+                stars: r.stargazers_count,
+                forks: r.forks_count,
+                watchers: r.watchers_count
+              };
+            });
+
+            history.snapshots[today] = todayData;
+            history.updated_at = new Date().toISOString();
+
+            // Retain last 60 days of snapshot history
+            const dates = Object.keys(history.snapshots).sort();
+            if (dates.length > 60) {
+              delete history.snapshots[dates[0]];
+            }
+
+            fs.writeFileSync(path, JSON.stringify(history, null, 2));
+            console.log("Successfully recorded snapshot for " + today + " with " + Object.keys(todayData).length + " repos.");
+          }
+
+          record().catch(err => {
+            console.error("Snapshot error:", err);
+            process.exit(1);
+          });
+          '
+
+      - name: Commit and Push Snapshot Data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/history.json
+          git diff --staged --quiet || git commit -m "update: daily repository stats snapshot [skip ci]"
+          git push

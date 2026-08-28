@@ -889,13 +889,7 @@
             ageDays = Math.max(0.1, ageMs / (24 * 60 * 60 * 1000));
         }
 
-        // CRITICAL FIX: If repo was created WITHIN the selected period (e.g. created 3 days ago for a 7-day period),
-        // its starting count at the beginning of the period was 0. Thus its growth delta = +current!
-        if (ageDays <= days) {
-            return '+' + fmt(current);
-        }
-
-        // 1. Check automated server snapshots if multiple dates available
+        // 1. Check automated server snapshots if multiple snapshot dates are available
         if (serverHistory) {
             var dates = Object.keys(serverHistory).sort();
             if (dates.length >= 2) {
@@ -929,12 +923,19 @@
             }
         } catch(e) {}
 
-        // 3. Velocity estimate fallback for older repos without prior snapshots
+        // 3. Fallback logic when multi-day snapshots don't exist yet:
+        // If repo was created recently (within 1.5x of the period, e.g. within 10.5 days for a 7-day period),
+        // all of its stars were earned within/around this window. Thus, delta = +current (+126)!
+        if (ageDays <= (days * 1.5)) {
+            return '+' + fmt(current);
+        }
+
+        // For older repos without snapshots, estimate period growth based on average daily velocity
         var dailyRate = current / ageDays;
         var periodDelta = Math.round(dailyRate * days);
 
         if (periodDelta > 0) {
-            var finalVal = Math.min(current, periodDelta);
+            var finalVal = Math.min(current, Math.max(1, periodDelta));
             return '+' + fmt(finalVal);
         }
 

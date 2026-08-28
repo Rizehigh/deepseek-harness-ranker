@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
     <title>DeepSeek Harness GitHub Ranker</title>
-    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and issues across daily, weekly, and monthly growth timeframes.">
+    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and issues across growth timeframes and creation dates.">
     <meta name="keywords" content="DeepSeek, DeepSeek Harness, GitHub Leaderboard, DeepSeek AI, GitHub Ranker, Open Source AI, AI Harness">
     <meta property="og:title" content="DeepSeek Harness GitHub Ranker">
     <meta property="og:description" content="Top open-source GitHub repositories related to DeepSeek Harness ranked by stars, forks, and issues.">
@@ -198,7 +198,7 @@
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 24px;
+            gap: 20px;
             justify-content: center;
             align-items: flex-end;
             margin-bottom: 28px;
@@ -213,7 +213,7 @@
         }
         .control-group label {
             font-family: var(--font-code);
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 600;
             color: var(--md-on-surface-variant);
             text-transform: uppercase;
@@ -222,10 +222,10 @@
         }
 
         .controls select {
-            padding: 12px 40px 12px 18px;
+            padding: 12px 36px 12px 16px;
             border: 1px solid var(--md-outline);
             border-radius: var(--md-shape-xs);
-            font-size: 17px;
+            font-size: 16.5px;
             font-weight: 600;
             font-family: var(--font-head);
             line-height: 1.4;
@@ -236,8 +236,8 @@
             -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23CAC4D0' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
-            min-width: 200px;
+            background-position: right 10px center;
+            min-width: 175px;
             transition: border-color var(--md-motion-duration-short);
         }
         .controls select option {
@@ -250,10 +250,10 @@
         .controls select:focus { outline: none; border-color: var(--md-primary); border-width: 2px; }
 
         #fetchBtn {
-            padding: 12px 32px;
+            padding: 12px 28px;
             border: none;
             border-radius: var(--md-shape-full);
-            font-size: 17px;
+            font-size: 16.5px;
             font-weight: 700;
             font-family: var(--font-head);
             cursor: pointer;
@@ -262,7 +262,7 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            height: 50px;
+            height: 48px;
         }
         #fetchBtn:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
 
@@ -667,6 +667,16 @@
                 </select>
             </div>
             <div class="control-group">
+                <label for="createdFilter">Created Within</label>
+                <select id="createdFilter">
+                    <option value="all" selected>All Time</option>
+                    <option value="today">Past 24 Hours</option>
+                    <option value="week">Past 7 Days</option>
+                    <option value="month">Past 30 Days</option>
+                    <option value="year">Past 365 Days</option>
+                </select>
+            </div>
+            <div class="control-group">
                 <label for="metric">Rank Metric</label>
                 <select id="metric">
                     <option value="stars" selected>Stars</option>
@@ -686,15 +696,12 @@
         <div id="error"></div>
 
         <div id="results" style="display:none">
-            <!-- Category & Release Time Filter Chips -->
+            <!-- Category Filter Chips Bar -->
             <div class="category-chips" id="categoryChips">
                 <button class="chip active" data-cat="all">All Projects</button>
                 <button class="chip" data-cat="harness">⚡ Harness & SDKs</button>
                 <button class="chip" data-cat="agent">🤖 Agents & Swarms</button>
                 <button class="chip" data-cat="benchmark">🧪 Evals & Benchmarks</button>
-                <button class="chip" data-cat="created_today">🆕 Created Today</button>
-                <button class="chip" data-cat="created_week">🔥 Created This Week</button>
-                <button class="chip" data-cat="created_month">📅 Created This Month</button>
             </div>
 
             <!-- Client-side quick search bar -->
@@ -911,21 +918,21 @@
         return '+' + fmt(current);
     }
 
-    function getCacheKey(m, page) {
-        return 'gh_ranker_cache_' + m + '_' + page;
+    function getCacheKey(m, created, page) {
+        return 'gh_ranker_cache_' + m + '_' + created + '_' + page;
     }
-    function getFromCache(m, page) {
+    function getFromCache(m, created, page) {
         try {
-            var raw = sessionStorage.getItem(getCacheKey(m, page));
+            var raw = sessionStorage.getItem(getCacheKey(m, created, page));
             if (!raw) return null;
             var obj = JSON.parse(raw);
             if (Date.now() - obj.time > 5 * 60 * 1000) return null;
             return obj.data;
         } catch(e) { return null; }
     }
-    function setToCache(m, page, data) {
+    function setToCache(m, created, page, data) {
         try {
-            sessionStorage.setItem(getCacheKey(m, page), JSON.stringify({ time: Date.now(), data: data }));
+            sessionStorage.setItem(getCacheKey(m, created, page), JSON.stringify({ time: Date.now(), data: data }));
         } catch(e) {}
     }
 
@@ -937,6 +944,7 @@
         $filterInput.value = '';
         currentQuery = {
             period: document.getElementById('period').value,
+            created: document.getElementById('createdFilter').value,
             metric: document.getElementById('metric').value,
         };
         $emptyState.style.display = 'none';
@@ -953,8 +961,9 @@
         currentPage++;
 
         var m = currentQuery.metric;
+        var created = currentQuery.created;
 
-        var cached = getFromCache(m, currentPage);
+        var cached = getFromCache(m, created, currentPage);
         if (cached) {
             isFetching = false;
             $loading.style.display = 'none';
@@ -964,11 +973,23 @@
             return;
         }
 
-        // Search repositories related to deepseek-harness
+        // Search query construction with optional creation date filter
         var sort = m === 'issues' ? 'help-wanted-issues' : m;
-        var q    = 'deepseek-harness in:name,description,readme';
-        var url  = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
-                 + '&sort=' + sort + '&order=desc&per_page=' + perPage + '&page=' + currentPage;
+        var q = 'deepseek-harness in:name,description,readme';
+
+        if (created !== 'all') {
+            var d = new Date();
+            if (created === 'today') d.setDate(d.getDate() - 1);
+            else if (created === 'week') d.setDate(d.getDate() - 7);
+            else if (created === 'month') d.setMonth(d.getMonth() - 1);
+            else if (created === 'year') d.setFullYear(d.getFullYear() - 1);
+            
+            var dateStr = d.toISOString().split('T')[0];
+            q += ' created:>' + dateStr;
+        }
+
+        var url = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
+                + '&sort=' + sort + '&order=desc&per_page=' + perPage + '&page=' + currentPage;
 
         fetch(url, { headers: getHeaders() })
             .then(function(r) {
@@ -991,7 +1012,7 @@
                 $loading.style.display = 'none';
                 $fetchingMore.style.display = 'none';
 
-                setToCache(m, currentPage, data);
+                setToCache(m, created, currentPage, data);
                 saveSnapshot(data.items || []);
                 processResponseData(data);
                 if (cb) cb();
@@ -1042,22 +1063,12 @@
         var metric = currentQuery.metric;
         var label  = metricLabel(metric);
 
-        var nowMs = Date.now();
-
-        // Apply Category & Creation Time Filter
+        // Apply Category Filter
         var categoryFiltered = allRepos.filter(function(r) {
             var text = ((r.name || '') + ' ' + (r.description || '')).toLowerCase();
             if (activeCategory === 'agent') return text.indexOf('agent') !== -1 || text.indexOf('swarm') !== -1;
             if (activeCategory === 'harness') return text.indexOf('harness') !== -1 || text.indexOf('sdk') !== -1;
             if (activeCategory === 'benchmark') return text.indexOf('bench') !== -1 || text.indexOf('eval') !== -1;
-            
-            if (r.created_at) {
-                var ageMs = nowMs - new Date(r.created_at).getTime();
-                var ageDays = ageMs / (24 * 60 * 60 * 1000);
-                if (activeCategory === 'created_today') return ageDays <= 1;
-                if (activeCategory === 'created_week') return ageDays <= 7;
-                if (activeCategory === 'created_month') return ageDays <= 30;
-            }
             return true;
         });
 

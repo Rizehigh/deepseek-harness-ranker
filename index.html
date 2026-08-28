@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
     <title>DeepSeek Harness GitHub Ranker</title>
-    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and watchers across daily, weekly, monthly, and yearly timeframes.">
+    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and open issues across daily, weekly, and monthly timeframes.">
     <meta name="keywords" content="DeepSeek, DeepSeek Harness, GitHub Leaderboard, DeepSeek AI, GitHub Ranker, Open Source AI, AI Harness">
     <meta property="og:title" content="DeepSeek Harness GitHub Ranker">
-    <meta property="og:description" content="Top open-source GitHub repositories related to DeepSeek Harness ranked by stars, forks, and watchers.">
+    <meta property="og:description" content="Top open-source GitHub repositories related to DeepSeek Harness ranked by stars, forks, and open issues.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="DeepSeek Harness GitHub Ranker">
@@ -198,7 +198,7 @@
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 24px;
             justify-content: center;
             align-items: flex-end;
             margin-bottom: 28px;
@@ -221,7 +221,7 @@
             padding-left: 2px;
         }
 
-        .controls select, .controls input[type="text"] {
+        .controls select {
             padding: 12px 40px 12px 18px;
             border: 1px solid var(--md-outline);
             border-radius: var(--md-shape-xs);
@@ -237,7 +237,7 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23CAC4D0' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
-            min-width: 170px;
+            min-width: 200px;
             transition: border-color var(--md-motion-duration-short);
         }
         .controls select option {
@@ -480,13 +480,13 @@
             color: var(--md-on-surface-variant);
             white-space: nowrap;
         }
+        .podium-extra-stats span { display: inline-flex; align-items: center; gap: 4px; }
         .podium-delta {
             color: var(--accent-green);
             font-weight: 700;
             font-size: 12px;
             margin-left: 2px;
         }
-        .podium-extra-stats span { display: inline-flex; align-items: center; gap: 4px; }
 
         /* ─── Repo List (M3 List) ─── */
         .list-section {
@@ -608,6 +608,11 @@
             cursor: pointer;
             background: transparent;
             color: var(--md-primary);
+            transition: all var(--md-motion-duration-short);
+        }
+        .load-more-wrap button:hover {
+            background: rgba(208, 188, 255, 0.08);
+            border-color: var(--md-primary);
         }
 
         .fetching-more { text-align: center; padding: 24px; color: var(--md-on-surface-variant); font-size: 15px; display: none; }
@@ -653,28 +658,20 @@
 
         <div class="controls">
             <div class="control-group">
-                <label for="period">Period</label>
+                <label for="period">Delta Growth Period</label>
                 <select id="period">
-                    <option value="day">Past day</option>
-                    <option value="week" selected>Past week</option>
-                    <option value="month">Past month</option>
-                    <option value="year">Past year</option>
+                    <option value="day">Past 24 Hours</option>
+                    <option value="week" selected>Past 7 Days</option>
+                    <option value="month">Past 30 Days</option>
+                    <option value="year">Past 365 Days</option>
                 </select>
             </div>
             <div class="control-group">
-                <label for="metric">Metric</label>
+                <label for="metric">Rank Metric</label>
                 <select id="metric">
                     <option value="stars" selected>Stars</option>
                     <option value="forks">Forks</option>
                     <option value="issues">Open Issues</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="count">Show</label>
-                <select id="count">
-                    <option value="20" selected>Top 20</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
                 </select>
             </div>
             <button id="fetchBtn">
@@ -708,7 +705,7 @@
             </div>
             <div class="list-section" id="repoList"></div>
             <div class="load-more-wrap" id="loadMoreWrap">
-                <button id="loadMoreBtn">Load more</button>
+                <button id="loadMoreBtn">Load more projects</button>
             </div>
             <div class="fetching-more" id="fetchingMore">
                 <div class="spinner" style="width:28px;height:28px;border-width:3px;"></div>
@@ -728,8 +725,8 @@
     var serverHistory = null;
     var currentPage = 0;
     var perPage = 30;
-    var targetCount = 20;
-    var hasMore = false;
+    var visibleLimit = 20; // Starts at 20, increases by +20 on "Load More"
+    var hasMoreAPI = false;
     var isFetching = false;
     var currentQuery = {};
     var activeCategory = 'all';
@@ -778,7 +775,7 @@
     });
 
     document.getElementById('fetchBtn').addEventListener('click', function() { startFetch(); });
-    $loadMoreBtn.addEventListener('click', loadMore);
+    $loadMoreBtn.addEventListener('click', handleLoadMore);
     $filterInput.addEventListener('input', function() { render(); });
 
     var MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
@@ -786,7 +783,7 @@
     var ICON_STAR  = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
     var ICON_FORK  = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>';
     var ICON_ISSUE = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>';
-    var ICON_WARN = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>';
+    var ICON_WARN  = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>';
 
     function metricVal(repo, m) {
         if (m === 'stars') return repo.stargazers_count;
@@ -802,20 +799,10 @@
         if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
         return String(n);
     }
-    function dateStr(period) {
-        var d = new Date();
-        switch (period) {
-            case 'day':   d.setDate(d.getDate() - 1);         break;
-            case 'week':  d.setDate(d.getDate() - 7);         break;
-            case 'month': d.setMonth(d.getMonth() - 1);       break;
-            case 'year':  d.setFullYear(d.getFullYear() - 1); break;
-        }
-        return d.toISOString().split('T')[0];
-    }
     function isNewRepo(created_at) {
         if (!created_at) return false;
         var period = currentQuery.period || 'week';
-        var maxDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 90));
+        var maxDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
         var ageMs = Date.now() - new Date(created_at).getTime();
         return ageMs > 0 && ageMs <= (maxDays * 24 * 60 * 60 * 1000);
     }
@@ -876,13 +863,13 @@
         if (serverHistory) {
             var dates = Object.keys(serverHistory).sort();
             if (dates.length > 0) {
-                var targetDays = period === 'day' ? 1 : (period === 'week' ? 7 : 30);
+                var targetDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
                 var targetDateIndex = Math.max(0, dates.length - 1 - targetDays);
                 var pastDate = dates[targetDateIndex];
                 var pastRecord = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
 
                 if (pastRecord) {
-                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : (pastRecord.issues || pastRecord.watchers || 0));
+                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : (pastRecord.issues || 0));
                     var diff = current - pastVal;
                     if (diff > 0) return '+' + fmt(diff);
                     if (diff < 0) return '-' + fmt(Math.abs(diff));
@@ -897,7 +884,7 @@
             if (localDates.length >= 2) {
                 var pastRec = store[localDates[0]][repo.full_name];
                 if (pastRec) {
-                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : (pastRec.i || pastRec.w || 0));
+                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : (pastRec.i || 0));
                     var d = current - pVal;
                     if (d > 0) return '+' + fmt(d);
                     if (d < 0) return '-' + fmt(Math.abs(d));
@@ -909,30 +896,30 @@
         return null;
     }
 
-    function getCacheKey(p, m, page) {
-        return 'gh_ranker_cache_' + p + '_' + m + '_' + page;
+    function getCacheKey(m, page) {
+        return 'gh_ranker_cache_' + m + '_' + page;
     }
-    function getFromCache(p, m, page) {
+    function getFromCache(m, page) {
         try {
-            var raw = sessionStorage.getItem(getCacheKey(p, m, page));
+            var raw = sessionStorage.getItem(getCacheKey(m, page));
             if (!raw) return null;
             var obj = JSON.parse(raw);
             if (Date.now() - obj.time > 5 * 60 * 1000) return null;
             return obj.data;
         } catch(e) { return null; }
     }
-    function setToCache(p, m, page, data) {
+    function setToCache(m, page, data) {
         try {
-            sessionStorage.setItem(getCacheKey(p, m, page), JSON.stringify({ time: Date.now(), data: data }));
+            sessionStorage.setItem(getCacheKey(m, page), JSON.stringify({ time: Date.now(), data: data }));
         } catch(e) {}
     }
 
     function startFetch() {
         allRepos = [];
         currentPage = 0;
-        hasMore = false;
+        visibleLimit = 20;
+        hasMoreAPI = false;
         $filterInput.value = '';
-        targetCount = parseInt(document.getElementById('count').value, 10);
         currentQuery = {
             period: document.getElementById('period').value,
             metric: document.getElementById('metric').value,
@@ -945,26 +932,26 @@
         fetchNextPage();
     }
 
-    function fetchNextPage() {
+    function fetchNextPage(cb) {
         if (isFetching) return;
         isFetching = true;
         currentPage++;
 
-        var p = currentQuery.period;
         var m = currentQuery.metric;
 
-        var cached = getFromCache(p, m, currentPage);
+        var cached = getFromCache(m, currentPage);
         if (cached) {
             isFetching = false;
             $loading.style.display = 'none';
             $fetchingMore.style.display = 'none';
             processResponseData(cached);
+            if (cb) cb();
             return;
         }
 
-        var ds   = dateStr(p);
+        // Full GitHub Search across all repos related to deepseek-harness
         var sort = m === 'issues' ? 'help-wanted-issues' : m;
-        var q    = 'deepseek-harness in:name,description,readme created:>' + ds;
+        var q    = 'deepseek-harness in:name,description,readme';
         var url  = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
                  + '&sort=' + sort + '&order=desc&per_page=' + perPage + '&page=' + currentPage;
 
@@ -989,9 +976,10 @@
                 $loading.style.display = 'none';
                 $fetchingMore.style.display = 'none';
 
-                setToCache(p, m, currentPage, data);
+                setToCache(m, currentPage, data);
                 saveSnapshot(data.items || []);
                 processResponseData(data);
+                if (cb) cb();
             })
             .catch(function(err) {
                 isFetching = false;
@@ -1018,23 +1006,26 @@
         }
 
         allRepos = allRepos.concat(data.items || []);
-        hasMore = allRepos.length < Math.min(data.total_count, 1000) && (data.items || []).length === perPage;
+        hasMoreAPI = allRepos.length < Math.min(data.total_count, 1000) && (data.items || []).length === perPage;
         render();
     }
 
-    function loadMore() {
-        $fetchingMore.style.display = 'block';
-        $loadMoreWrap.style.display = 'none';
-        fetchNextPage();
+    function handleLoadMore() {
+        visibleLimit += 20; // Show +20 more items
+        if (allRepos.length < visibleLimit && hasMoreAPI) {
+            $fetchingMore.style.display = 'block';
+            $loadMoreWrap.style.display = 'none';
+            fetchNextPage(function() {
+                render();
+            });
+        } else {
+            render();
+        }
     }
 
     function render() {
         var metric = currentQuery.metric;
         var label  = metricLabel(metric);
-
-        if (metric === 'watches') {
-            allRepos.sort(function(a, b) { return b.watchers_count - a.watchers_count; });
-        }
 
         // Apply Category Pills Filter
         var categoryFiltered = allRepos.filter(function(r) {
@@ -1046,7 +1037,7 @@
             return true;
         });
 
-        // Apply Search Bar Filter
+        // Apply Quick Search Bar Filter
         var filterTerm = ($filterInput.value || '').toLowerCase().trim();
         var filtered = categoryFiltered;
         if (filterTerm) {
@@ -1057,8 +1048,7 @@
             });
         }
 
-        var visible   = filtered.slice(0, targetCount);
-        var needsMore = allRepos.length < targetCount && hasMore && !filterTerm && activeCategory === 'all';
+        var visible = filtered.slice(0, visibleLimit);
 
         // ── Podium ──
         $podium.innerHTML = '';
@@ -1073,8 +1063,6 @@
             var newTag = isNewRepo(repo.created_at) ? '<div class="podium-badge-new">New</div>' : '';
             var mainDelta = getMetricDelta(repo, metric);
 
-            // Construct footer only showing the 2 non-selected metrics to avoid duplication
-            var extraHtml = '';
             var sD = getMetricDelta(repo, 'stars');
             var fD = getMetricDelta(repo, 'forks');
             var iD = getMetricDelta(repo, 'issues');
@@ -1083,6 +1071,7 @@
             var fFmt = ICON_FORK + ' ' + fmt(repo.forks_count) + (fD ? ' <b class="podium-delta">' + fD + '</b>' : '');
             var iFmt = ICON_ISSUE + ' ' + fmt(repo.open_issues_count || 0) + (iD ? ' <b class="podium-delta">' + iD + '</b>' : '');
 
+            var extraHtml = '';
             if (metric === 'stars') {
                 extraHtml = '<span>' + fFmt + '</span> &middot; <span>' + iFmt + '</span>';
             } else if (metric === 'forks') {
@@ -1139,9 +1128,8 @@
 
         $results.style.display = 'block';
 
-        if (needsMore) {
-            loadMore();
-        } else if (hasMore && !filterTerm && activeCategory === 'all') {
+        // Load More button visibility
+        if (visible.length < filtered.length || hasMoreAPI) {
             $loadMoreWrap.style.display = 'block';
         } else {
             $loadMoreWrap.style.display = 'none';

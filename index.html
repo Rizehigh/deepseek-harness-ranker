@@ -879,8 +879,9 @@
         var current = metricVal(repo, m);
         if (current === 0) return null;
 
-        var period = currentQuery.period || 'week';
-        var days   = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
+        var period  = currentQuery.period || 'week';
+        var created = currentQuery.created || 'all';
+        var days    = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
 
         // Calculate exact age of repository in days
         var ageDays = 99999;
@@ -889,7 +890,17 @@
             ageDays = Math.max(0.1, ageMs / (24 * 60 * 60 * 1000));
         }
 
-        // 1. Check automated server snapshots if multiple snapshot dates are available
+        // RULE 1: If Created Filter & Growth Timeframe match (e.g. 7 days created + 7 days growth),
+        // OR if repo was created within the timeframe (ageDays <= days * 1.2):
+        // 7 days ago it did not exist (0 stars). Total growth in timeframe = +current (+126)!
+        var createdDaysMap = { 'today': 1, 'week': 7, 'month': 30, 'year': 365 };
+        var createdLimitDays = createdDaysMap[created] || 99999;
+
+        if (ageDays <= (days * 1.2) || (created !== 'all' && createdLimitDays <= days)) {
+            return '+' + fmt(current);
+        }
+
+        // RULE 2: For older repos (created BEFORE the start of the timeframe), compare against historical snapshots
         if (serverHistory) {
             var dates = Object.keys(serverHistory).sort();
             if (dates.length >= 2) {
@@ -907,7 +918,7 @@
             }
         }
 
-        // 2. Check client-side localStorage snapshots
+        // RULE 3: Check client-side localStorage snapshots for older repos
         try {
             var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
             var localDates = Object.keys(store).sort();
@@ -923,14 +934,7 @@
             }
         } catch(e) {}
 
-        // 3. Fallback logic when multi-day snapshots don't exist yet:
-        // If repo was created recently (within 1.5x of the period, e.g. within 10.5 days for a 7-day period),
-        // all of its stars were earned within/around this window. Thus, delta = +current (+126)!
-        if (ageDays <= (days * 1.5)) {
-            return '+' + fmt(current);
-        }
-
-        // For older repos without snapshots, estimate period growth based on average daily velocity
+        // RULE 4: Velocity estimate fallback for older repos without prior snapshots
         var dailyRate = current / ageDays;
         var periodDelta = Math.round(dailyRate * days);
 

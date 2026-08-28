@@ -890,51 +890,73 @@
             ageDays = Math.max(0.1, ageMs / (24 * 60 * 60 * 1000));
         }
 
-        // RULE 1: If Created Filter & Growth Timeframe match (e.g. 7 days created + 7 days growth),
-        // OR if repo was created within the timeframe (ageDays <= days * 1.2):
-        // 7 days ago it did not exist (0 stars). Total growth in timeframe = +current (+126)!
         var createdDaysMap = { 'today': 1, 'week': 7, 'month': 30, 'year': 365 };
         var createdLimitDays = createdDaysMap[created] || 99999;
 
-        if (ageDays <= (days * 1.2) || (created !== 'all' && createdLimitDays <= days)) {
+        // RULE 1: Secret / Priority Rule:
+        // If created filter matches or is within timeframe (e.g. Created 7 Days & Growth 7 Days),
+        // OR if repo was created within/around the timeframe (ageDays <= days * 1.5):
+        // 7 days ago it had 0 stars -> Delta MUST be +current (+126)!
+        if ((created !== 'all' && createdLimitDays <= days) || ageDays <= (days * 1.5)) {
             return '+' + fmt(current);
         }
 
-        // RULE 2: For older repos (created BEFORE the start of the timeframe), compare against historical snapshots
+        // RULE 2: Automated server snapshots check with actual date span verification
         if (serverHistory) {
             var dates = Object.keys(serverHistory).sort();
             if (dates.length >= 2) {
+                var latestDateStr = dates[dates.length - 1];
                 var targetIdx = Math.max(0, dates.length - 1 - days);
-                var pastDate = dates[targetIdx];
-                var pastRec = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
+                var pastDateStr = dates[targetIdx];
+                var pastRec = serverHistory[pastDateStr] ? serverHistory[pastDateStr][repo.full_name] : null;
 
                 if (pastRec) {
                     var pastVal = m === 'stars' ? pastRec.stars : (m === 'forks' ? pastRec.forks : (pastRec.issues || 0));
-                    var diff = current - pastVal;
-                    if (diff > 0) return '+' + fmt(diff);
-                    if (diff < 0) return '-' + fmt(Math.abs(diff));
-                    if (diff === 0) return '+0';
+                    var actualDiff = current - pastVal;
+                    var actualDays = Math.max(1, (new Date(latestDateStr).getTime() - new Date(pastDateStr).getTime()) / (24 * 60 * 60 * 1000));
+
+                    if (actualDays >= days * 0.7) {
+                        if (actualDiff > 0) return '+' + fmt(actualDiff);
+                        if (actualDiff < 0) return '-' + fmt(Math.abs(actualDiff));
+                        return '+0';
+                    } else {
+                        // Extrapolate 1-day snapshot rate to match requested target timeframe
+                        var rate = actualDiff / actualDays;
+                        var extrapolated = Math.round(rate * days);
+                        if (extrapolated > 0) return '+' + fmt(extrapolated);
+                    }
                 }
             }
         }
 
-        // RULE 3: Check client-side localStorage snapshots for older repos
+        // RULE 3: Client-side localStorage snapshots check with actual date span verification
         try {
             var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
             var localDates = Object.keys(store).sort();
             if (localDates.length >= 2) {
-                var pastRecLocal = store[localDates[0]][repo.full_name];
+                var lLatest = localDates[localDates.length - 1];
+                var lPast = localDates[0];
+                var pastRecLocal = store[lPast][repo.full_name];
+
                 if (pastRecLocal) {
                     var pVal = m === 'stars' ? pastRecLocal.s : (m === 'forks' ? pastRecLocal.f : (pastRecLocal.i || 0));
-                    var d = current - pVal;
-                    if (d > 0) return '+' + fmt(d);
-                    if (d < 0) return '-' + fmt(Math.abs(d));
-                    if (d === 0) return '+0';
+                    var locDiff = current - pVal;
+                    var locDays = Math.max(1, (new Date(lLatest).getTime() - new Date(lPast).getTime()) / (24 * 60 * 60 * 1000));
+
+                    if (locDays >= days * 0.7) {
+                        if (locDiff > 0) return '+' + fmt(locDiff);
+                        if (locDiff < 0) return '-' + fmt(Math.abs(locDiff));
+                        return '+0';
+                    } else {
+                        var lRate = locDiff / locDays;
+                        var lExtrapolated = Math.round(lRate * days);
+                        if (lExtrapolated > 0) return '+' + fmt(lExtrapolated);
+                    }
                 }
             }
         } catch(e) {}
 
-        // RULE 4: Velocity estimate fallback for older repos without prior snapshots
+        // RULE 4: Daily velocity estimate fallback for older repos without prior snapshots
         var dailyRate = current / ageDays;
         var periodDelta = Math.round(dailyRate * days);
 

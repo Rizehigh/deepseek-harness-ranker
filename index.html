@@ -13,6 +13,9 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="DeepSeek Harness GitHub Ranker">
     <meta name="twitter:description" content="Top open-source GitHub repositories related to DeepSeek Harness.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="canonical" href="https://rizehigh.github.io/deepseek-harness-ranker/">
     <script type="application/ld+json">
     {
@@ -25,9 +28,6 @@
       "operatingSystem": "All"
     }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ─── Material 3 Dark Theme Tokens ─── */
         :root {
@@ -745,7 +745,7 @@
     var allRepos = [];
     var serverHistory = null;
     var currentPage = 0;
-    var perPage = 30;
+    var perPage = 100; // Fetch 100 items per API call (maximum allowed in 1 request)
     var visibleLimit = 20;
     var hasMoreAPI = false;
     var isFetching = false;
@@ -879,8 +879,21 @@
         var current = metricVal(repo, m);
         if (current === 0) return null;
 
-        var period  = currentQuery.period || 'week';
-        var days = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
+        var period = currentQuery.period || 'week';
+        var days   = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
+
+        // Calculate exact age of repository in days
+        var ageDays = 99999;
+        if (repo.created_at) {
+            var ageMs = Date.now() - new Date(repo.created_at).getTime();
+            ageDays = Math.max(0.1, ageMs / (24 * 60 * 60 * 1000));
+        }
+
+        // CRITICAL FIX: If repo was created WITHIN the selected period (e.g. created 3 days ago for a 7-day period),
+        // its starting count at the beginning of the period was 0. Thus its growth delta = +current!
+        if (ageDays <= days) {
+            return '+' + fmt(current);
+        }
 
         // 1. Check automated server snapshots if multiple dates available
         if (serverHistory) {
@@ -895,6 +908,7 @@
                     var diff = current - pastVal;
                     if (diff > 0) return '+' + fmt(diff);
                     if (diff < 0) return '-' + fmt(Math.abs(diff));
+                    if (diff === 0) return '+0';
                 }
             }
         }
@@ -910,21 +924,18 @@
                     var d = current - pVal;
                     if (d > 0) return '+' + fmt(d);
                     if (d < 0) return '-' + fmt(Math.abs(d));
+                    if (d === 0) return '+0';
                 }
             }
         } catch(e) {}
 
-        // 3. Fallback velocity calculation (ensures green +N delta always renders)
-        if (repo.created_at) {
-            var ageMs = Date.now() - new Date(repo.created_at).getTime();
-            var ageDays = Math.max(1, ageMs / (24 * 60 * 60 * 1000));
-            var dailyRate = current / ageDays;
-            var periodDelta = Math.round(dailyRate * days);
+        // 3. Velocity estimate fallback for older repos without prior snapshots
+        var dailyRate = current / ageDays;
+        var periodDelta = Math.round(dailyRate * days);
 
-            if (periodDelta > 0) {
-                var finalVal = Math.min(current, periodDelta);
-                return '+' + fmt(finalVal);
-            }
+        if (periodDelta > 0) {
+            var finalVal = Math.min(current, periodDelta);
+            return '+' + fmt(finalVal);
         }
 
         return '+' + fmt(current);
@@ -1055,12 +1066,20 @@
 
         allRepos = allRepos.concat(data.items || []);
         hasMoreAPI = allRepos.length < Math.min(data.total_count, 1000) && (data.items || []).length === perPage;
+        
         render();
+
+        // Check if filtering left us with fewer than 20 visible items; if so, fetch next page automatically
+        var filtered = getFilteredRepos();
+        if (filtered.length < visibleLimit && hasMoreAPI && !isFetching) {
+            fetchNextPage();
+        }
     }
 
     function handleLoadMore() {
         visibleLimit += 20;
-        if (allRepos.length < visibleLimit && hasMoreAPI) {
+        var filtered = getFilteredRepos();
+        if (filtered.length < visibleLimit && hasMoreAPI) {
             $fetchingMore.style.display = 'block';
             $loadMoreWrap.style.display = 'none';
             fetchNextPage(function() {
@@ -1071,10 +1090,7 @@
         }
     }
 
-    function render() {
-        var metric = currentQuery.metric;
-        var label  = metricLabel(metric);
-
+    function getFilteredRepos() {
         // Apply Category Filter
         var categoryFiltered = allRepos.filter(function(r) {
             var text = ((r.name || '') + ' ' + (r.description || '')).toLowerCase();
@@ -1086,15 +1102,22 @@
 
         // Apply Quick Search Bar Filter
         var filterTerm = ($filterInput.value || '').toLowerCase().trim();
-        var filtered = categoryFiltered;
         if (filterTerm) {
-            filtered = categoryFiltered.filter(function(r) {
+            return categoryFiltered.filter(function(r) {
                 return (r.name || '').toLowerCase().indexOf(filterTerm) !== -1 ||
                        (r.description || '').toLowerCase().indexOf(filterTerm) !== -1 ||
                        (r.owner.login || '').toLowerCase().indexOf(filterTerm) !== -1;
             });
         }
 
+        return categoryFiltered;
+    }
+
+    function render() {
+        var metric = currentQuery.metric;
+        var label  = metricLabel(metric);
+
+        var filtered = getFilteredRepos();
         var visible = filtered.slice(0, visibleLimit);
 
         // ── Podium ──

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rizehigh.github.io/deepseek-harness-ranker/sitemap.xml

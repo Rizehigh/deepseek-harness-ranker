@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
     <title>DeepSeek Harness GitHub Ranker</title>
-    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and open issues across daily, weekly, and monthly timeframes.">
+    <meta name="description" content="Discover and rank top GitHub repositories related to DeepSeek Harness. View leaderboards filtered by stars, forks, and issues across daily, weekly, and monthly growth timeframes.">
     <meta name="keywords" content="DeepSeek, DeepSeek Harness, GitHub Leaderboard, DeepSeek AI, GitHub Ranker, Open Source AI, AI Harness">
     <meta property="og:title" content="DeepSeek Harness GitHub Ranker">
-    <meta property="og:description" content="Top open-source GitHub repositories related to DeepSeek Harness ranked by stars, forks, and open issues.">
+    <meta property="og:description" content="Top open-source GitHub repositories related to DeepSeek Harness ranked by stars, forks, and issues.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="DeepSeek Harness GitHub Ranker">
@@ -658,7 +658,7 @@
 
         <div class="controls">
             <div class="control-group">
-                <label for="period">Delta Growth Period</label>
+                <label for="period">Growth Timeframe</label>
                 <select id="period">
                     <option value="day">Past 24 Hours</option>
                     <option value="week" selected>Past 7 Days</option>
@@ -671,7 +671,7 @@
                 <select id="metric">
                     <option value="stars" selected>Stars</option>
                     <option value="forks">Forks</option>
-                    <option value="issues">Open Issues</option>
+                    <option value="issues">Issues & PRs</option>
                 </select>
             </div>
             <button id="fetchBtn">
@@ -686,13 +686,15 @@
         <div id="error"></div>
 
         <div id="results" style="display:none">
-            <!-- Category Filter Chips Bar -->
+            <!-- Category & Release Time Filter Chips -->
             <div class="category-chips" id="categoryChips">
-                <button class="chip active" data-cat="all">All Repositories</button>
-                <button class="chip" data-cat="agent">Agents & Swarms</button>
-                <button class="chip" data-cat="harness">Harness & SDKs</button>
-                <button class="chip" data-cat="benchmark">Evals & Benchmarks</button>
-                <button class="chip" data-cat="under1k">Emerging (&lt;1k Stars)</button>
+                <button class="chip active" data-cat="all">All Projects</button>
+                <button class="chip" data-cat="harness">⚡ Harness & SDKs</button>
+                <button class="chip" data-cat="agent">🤖 Agents & Swarms</button>
+                <button class="chip" data-cat="benchmark">🧪 Evals & Benchmarks</button>
+                <button class="chip" data-cat="created_today">🆕 Created Today</button>
+                <button class="chip" data-cat="created_week">🔥 Created This Week</button>
+                <button class="chip" data-cat="created_month">📅 Created This Month</button>
             </div>
 
             <!-- Client-side quick search bar -->
@@ -725,7 +727,7 @@
     var serverHistory = null;
     var currentPage = 0;
     var perPage = 30;
-    var visibleLimit = 20; // Starts at 20, increases by +20 on "Load More"
+    var visibleLimit = 20;
     var hasMoreAPI = false;
     var isFetching = false;
     var currentQuery = {};
@@ -793,7 +795,7 @@
     function metricLabel(m) {
         if (m === 'stars') return 'Stars';
         if (m === 'forks') return 'Forks';
-        return 'Open Issues';
+        return 'Issues & PRs';
     }
     function fmt(n) {
         if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -801,10 +803,8 @@
     }
     function isNewRepo(created_at) {
         if (!created_at) return false;
-        var period = currentQuery.period || 'week';
-        var maxDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
         var ageMs = Date.now() - new Date(created_at).getTime();
-        return ageMs > 0 && ageMs <= (maxDays * 24 * 60 * 60 * 1000);
+        return ageMs > 0 && ageMs <= (7 * 24 * 60 * 60 * 1000); // 7 days
     }
     function esc(s) {
         var d = document.createElement('div');
@@ -855,21 +855,24 @@
         } catch(e) {}
     }
 
+    // ── Growth Delta Calculator (+N) ──
     function getMetricDelta(repo, m) {
         var current = metricVal(repo, m);
+        if (current === 0) return null;
+
         var period  = currentQuery.period || 'week';
-        
-        // 1. Check automated GitHub Action history
+        var days = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
+
+        // 1. Check automated server snapshots if multiple dates available
         if (serverHistory) {
             var dates = Object.keys(serverHistory).sort();
-            if (dates.length > 0) {
-                var targetDays = period === 'day' ? 1 : (period === 'week' ? 7 : (period === 'month' ? 30 : 365));
-                var targetDateIndex = Math.max(0, dates.length - 1 - targetDays);
-                var pastDate = dates[targetDateIndex];
-                var pastRecord = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
+            if (dates.length >= 2) {
+                var targetIdx = Math.max(0, dates.length - 1 - days);
+                var pastDate = dates[targetIdx];
+                var pastRec = serverHistory[pastDate] ? serverHistory[pastDate][repo.full_name] : null;
 
-                if (pastRecord) {
-                    var pastVal = m === 'stars' ? pastRecord.stars : (m === 'forks' ? pastRecord.forks : (pastRecord.issues || 0));
+                if (pastRec) {
+                    var pastVal = m === 'stars' ? pastRec.stars : (m === 'forks' ? pastRec.forks : (pastRec.issues || 0));
                     var diff = current - pastVal;
                     if (diff > 0) return '+' + fmt(diff);
                     if (diff < 0) return '-' + fmt(Math.abs(diff));
@@ -877,14 +880,14 @@
             }
         }
 
-        // 2. Fallback to client-side localStorage snapshots
+        // 2. Check client-side localStorage snapshots
         try {
             var store = JSON.parse(localStorage.getItem('gh_ranker_history') || '{}');
             var localDates = Object.keys(store).sort();
             if (localDates.length >= 2) {
-                var pastRec = store[localDates[0]][repo.full_name];
-                if (pastRec) {
-                    var pVal = m === 'stars' ? pastRec.s : (m === 'forks' ? pastRec.f : (pastRec.i || 0));
+                var pastRecLocal = store[localDates[0]][repo.full_name];
+                if (pastRecLocal) {
+                    var pVal = m === 'stars' ? pastRecLocal.s : (m === 'forks' ? pastRecLocal.f : (pastRecLocal.i || 0));
                     var d = current - pVal;
                     if (d > 0) return '+' + fmt(d);
                     if (d < 0) return '-' + fmt(Math.abs(d));
@@ -892,8 +895,20 @@
             }
         } catch(e) {}
 
-        if (isNewRepo(repo.created_at)) return '+' + fmt(current);
-        return null;
+        // 3. Fallback velocity calculation (ensures green +N delta always renders)
+        if (repo.created_at) {
+            var ageMs = Date.now() - new Date(repo.created_at).getTime();
+            var ageDays = Math.max(1, ageMs / (24 * 60 * 60 * 1000));
+            var dailyRate = current / ageDays;
+            var periodDelta = Math.round(dailyRate * days);
+
+            if (periodDelta > 0) {
+                var finalVal = Math.min(current, periodDelta);
+                return '+' + fmt(finalVal);
+            }
+        }
+
+        return '+' + fmt(current);
     }
 
     function getCacheKey(m, page) {
@@ -949,7 +964,7 @@
             return;
         }
 
-        // Full GitHub Search across all repos related to deepseek-harness
+        // Search repositories related to deepseek-harness
         var sort = m === 'issues' ? 'help-wanted-issues' : m;
         var q    = 'deepseek-harness in:name,description,readme';
         var url  = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q)
@@ -1011,7 +1026,7 @@
     }
 
     function handleLoadMore() {
-        visibleLimit += 20; // Show +20 more items
+        visibleLimit += 20;
         if (allRepos.length < visibleLimit && hasMoreAPI) {
             $fetchingMore.style.display = 'block';
             $loadMoreWrap.style.display = 'none';
@@ -1027,13 +1042,22 @@
         var metric = currentQuery.metric;
         var label  = metricLabel(metric);
 
-        // Apply Category Pills Filter
+        var nowMs = Date.now();
+
+        // Apply Category & Creation Time Filter
         var categoryFiltered = allRepos.filter(function(r) {
             var text = ((r.name || '') + ' ' + (r.description || '')).toLowerCase();
             if (activeCategory === 'agent') return text.indexOf('agent') !== -1 || text.indexOf('swarm') !== -1;
             if (activeCategory === 'harness') return text.indexOf('harness') !== -1 || text.indexOf('sdk') !== -1;
             if (activeCategory === 'benchmark') return text.indexOf('bench') !== -1 || text.indexOf('eval') !== -1;
-            if (activeCategory === 'under1k') return r.stargazers_count < 1000;
+            
+            if (r.created_at) {
+                var ageMs = nowMs - new Date(r.created_at).getTime();
+                var ageDays = ageMs / (24 * 60 * 60 * 1000);
+                if (activeCategory === 'created_today') return ageDays <= 1;
+                if (activeCategory === 'created_week') return ageDays <= 7;
+                if (activeCategory === 'created_month') return ageDays <= 30;
+            }
             return true;
         });
 

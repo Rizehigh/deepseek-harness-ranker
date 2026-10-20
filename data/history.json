@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-19T02:32:51.876Z",
+  "updated_at": "2026-10-20T02:45:39.264Z",
   "snapshots": {
     "2026-08-28": {
       "deepseek-ai/deepseek-harness": {
@@ -26604,6 +26604,508 @@
       "timschneeb/awesome-shizuku": {
         "stars": 10526,
         "forks": 291,
+        "issues": 2
+      }
+    },
+    "2026-10-20": {
+      "deepseek-ai/deepseek-harness": {
+        "stars": 254597,
+        "forks": 30760,
+        "issues": 0
+      },
+      "avelino/awesome-go": {
+        "stars": 189289,
+        "forks": 13641,
+        "issues": 84
+      },
+      "ollama/ollama": {
+        "stars": 183879,
+        "forks": 18418,
+        "issues": 4365
+      },
+      "msitarzewski/agency-agents": {
+        "stars": 161812,
+        "forks": 26183,
+        "issues": 166
+      },
+      "Graphify-Labs/graphify": {
+        "stars": 129229,
+        "forks": 12462,
+        "issues": 1567
+      },
+      "jaywcjlove/awesome-mac": {
+        "stars": 116533,
+        "forks": 9524,
+        "issues": 1479
+      },
+      "deepseek-ai/DeepSeek-V3": {
+        "stars": 104524,
+        "forks": 16703,
+        "issues": 295
+      },
+      "nexu-io/open-design": {
+        "stars": 102561,
+        "forks": 11752,
+        "issues": 1201
+      },
+      "thedotmack/claude-mem": {
+        "stars": 101818,
+        "forks": 8960,
+        "issues": 96
+      },
+      "stablyai/orca": {
+        "stars": 98399,
+        "forks": 6277,
+        "issues": 8620
+      },
+      "punkpeye/awesome-mcp-servers": {
+        "stars": 96629,
+        "forks": 18067,
+        "issues": 3225
+      },
+      "tt-a1i/archify": {
+        "stars": 85895,
+        "forks": 5845,
+        "issues": 259
+      },
+      "bytedance/deer-flow": {
+        "stars": 84161,
+        "forks": 11753,
+        "issues": 947
+      },
+      "pbakaus/impeccable": {
+        "stars": 83278,
+        "forks": 5037,
+        "issues": 51
+      },
+      "shareAI-lab/learn-claude-code": {
+        "stars": 78845,
+        "forks": 12616,
+        "issues": 70
+      },
+      "diegosouzapw/OmniRoute": {
+        "stars": 78578,
+        "forks": 11419,
+        "issues": 302
+      },
+      "unslothai/unsloth": {
+        "stars": 78281,
+        "forks": 7245,
+        "issues": 320
+      },
+      "headroomlabs-ai/headroom": {
+        "stars": 76291,
+        "forks": 5924,
+        "issues": 488
+      },
+      "hiyouga/LlamaFactory": {
+        "stars": 75593,
+        "forks": 9275,
+        "issues": 1196
+      },
+      "rohitg00/ai-engineering-from-scratch": {
+        "stars": 71471,
+        "forks": 12572,
+        "issues": 74
+      },
+      "openinterpreter/openinterpreter": {
+        "stars": 68608,
+        "forks": 5908,
+        "issues": 16
+      },
+      "shanraisshan/claude-code-best-practice": {
+        "stars": 67789,
+        "forks": 6752,
+        "issues": 24
+      },
+      "NanmiCoder/MediaCrawler": {
+        "stars": 67242,
+        "forks": 12842,
+        "issues": 217
+      },
+      "jingyaogong/minimind": {
+        "stars": 64009,
+        "forks": 8326,
+        "issues": 68
+      },
+      "hugohe3/ppt-master": {
+        "stars": 63916,
+        "forks": 5054,
+        "issues": 1
+      },
+      "Alishahryar1/free-claude-code": {
+        "stars": 61937,
+        "forks": 9732,
+        "issues": 299
+      },
+      "1c7/chinese-independent-developer": {
+        "stars": 61859,
+        "forks": 5494,
+        "issues": 1
+      },
+      "BerriAI/litellm": {
+        "stars": 61599,
+        "forks": 12485,
+        "issues": 5546
+      },
+      "rust-unofficial/awesome-rust": {
+        "stars": 59970,
+        "forks": 3697,
+        "issues": 10
+      },
+      "bojieli/ai-agent-book": {
+        "stars": 54984,
+        "forks": 6289,
+        "issues": 36
+      },
+      "multica-ai/multica": {
+        "stars": 53237,
+        "forks": 6980,
+        "issues": 1878
+      },
+      "vectorize-io/hindsight": {
+        "stars": 51699,
+        "forks": 6172,
+        "issues": 158
+      },
+      "KeygraphHQ/shannon": {
+        "stars": 49120,
+        "forks": 5628,
+        "issues": 25
+      },
+      "zhayujie/CowAgent": {
+        "stars": 47467,
+        "forks": 10398,
+        "issues": 22
+      },
+      "tinyhumansai/openhuman": {
+        "stars": 42164,
+        "forks": 4164,
+        "issues": 292
+      },
+      "HKUDS/DeepTutor": {
+        "stars": 41799,
+        "forks": 5286,
+        "issues": 152
+      },
+      "mindsdb/mindshub": {
+        "stars": 39801,
+        "forks": 6241,
+        "issues": 8
+      },
+      "tashfeenahmed/freellmapi": {
+        "stars": 37701,
+        "forks": 5086,
+        "issues": 45
+      },
+      "can1357/oh-my-pi": {
+        "stars": 35971,
+        "forks": 3967,
+        "issues": 3938
+      },
+      "HKUDS/Vibe-Trading": {
+        "stars": 35959,
+        "forks": 5850,
+        "issues": 25
+      },
+      "esengine/DeepSeek-Reasonix": {
+        "stars": 35871,
+        "forks": 2462,
+        "issues": 405
+      },
+      "Tencent/WeKnora": {
+        "stars": 34749,
+        "forks": 4630,
+        "issues": 712
+      },
+      "BigPizzaV3/CodexPlusPlus": {
+        "stars": 32379,
+        "forks": 2081,
+        "issues": 709
+      },
+      "anywhere-labs/dsh-desktop": {
+        "stars": 31803,
+        "forks": 1474,
+        "issues": 385
+      },
+      "nanocoai/nanoclaw": {
+        "stars": 30973,
+        "forks": 12923,
+        "issues": 1012
+      },
+      "wilsonfreitas/awesome-quant": {
+        "stars": 30213,
+        "forks": 4257,
+        "issues": 139
+      },
+      "rohitg00/agentmemory": {
+        "stars": 29692,
+        "forks": 2622,
+        "issues": 583
+      },
+      "TencentCloud/TencentDB-Agent-Memory": {
+        "stars": 29644,
+        "forks": 2990,
+        "issues": 772
+      },
+      "srbhr/Resume-Matcher": {
+        "stars": 28779,
+        "forks": 5087,
+        "issues": 40
+      },
+      "Ebony-Vinyl/dsh-our-free-model": {
+        "stars": 28012,
+        "forks": 603,
+        "issues": 250
+      },
+      "OthmanAdi/planning-with-files": {
+        "stars": 27539,
+        "forks": 2292,
+        "issues": 6
+      },
+      "Hannibal046/Awesome-LLM": {
+        "stars": 27443,
+        "forks": 2751,
+        "issues": 481
+      },
+      "Molunerfinn/PicGo": {
+        "stars": 27376,
+        "forks": 2335,
+        "issues": 30
+      },
+      "enescingoz/awesome-n8n-templates": {
+        "stars": 26022,
+        "forks": 6642,
+        "issues": 60
+      },
+      "titanwings/distilly": {
+        "stars": 25805,
+        "forks": 2403,
+        "issues": 72
+      },
+      "liguodongiot/llm-action": {
+        "stars": 25185,
+        "forks": 2978,
+        "issues": 20
+      },
+      "guillaumemeyer/watermarks-remover": {
+        "stars": 24476,
+        "forks": 2805,
+        "issues": 23
+      },
+      "browser-use/jev-ultrafast": {
+        "stars": 23296,
+        "forks": 1734,
+        "issues": 204
+      },
+      "spmallick/learnopencv": {
+        "stars": 23210,
+        "forks": 11654,
+        "issues": 221
+      },
+      "jundot/omlx": {
+        "stars": 22941,
+        "forks": 2189,
+        "issues": 591
+      },
+      "dream-num/univer": {
+        "stars": 22683,
+        "forks": 1899,
+        "issues": 148
+      },
+      "liyupi/ai-guide": {
+        "stars": 21382,
+        "forks": 2489,
+        "issues": 9
+      },
+      "EthicalML/awesome-production-machine-learning": {
+        "stars": 21017,
+        "forks": 2687,
+        "issues": 41
+      },
+      "walkinglabs/learn-harness-engineering": {
+        "stars": 20945,
+        "forks": 2533,
+        "issues": 16
+      },
+      "voyager-crew/voyager": {
+        "stars": 20432,
+        "forks": 681,
+        "issues": 6
+      },
+      "awesome-dsh-plugin/awesome-dsh-plugin": {
+        "stars": 19558,
+        "forks": 4588,
+        "issues": 178
+      },
+      "keon/awesome-nlp": {
+        "stars": 19088,
+        "forks": 2961,
+        "issues": 2
+      },
+      "andrewyng/openworker": {
+        "stars": 18629,
+        "forks": 2636,
+        "issues": 439
+      },
+      "BradyFU/Awesome-Multimodal-Large-Language-Models": {
+        "stars": 18054,
+        "forks": 1137,
+        "issues": 120
+      },
+      "itwanger/toBeBetterJavaer": {
+        "stars": 17775,
+        "forks": 2482,
+        "issues": 72
+      },
+      "wanshuiyin/Auto-claude-code-research-in-sleep": {
+        "stars": 17740,
+        "forks": 1673,
+        "issues": 74
+      },
+      "xx025/carrot": {
+        "stars": 17203,
+        "forks": 1451,
+        "issues": 44
+      },
+      "yetone/magpie": {
+        "stars": 17148,
+        "forks": 1235,
+        "issues": 1220
+      },
+      "HKUDS/DeepCode": {
+        "stars": 16735,
+        "forks": 2174,
+        "issues": 35
+      },
+      "owainlewis/awesome-artificial-intelligence": {
+        "stars": 16700,
+        "forks": 2569,
+        "issues": 78
+      },
+      "GreyDGL/PentestGPT": {
+        "stars": 16035,
+        "forks": 2976,
+        "issues": 91
+      },
+      "HKUDS/OpenHarness": {
+        "stars": 16016,
+        "forks": 2597,
+        "issues": 94
+      },
+      "YishenTu/claudian": {
+        "stars": 15740,
+        "forks": 1062,
+        "issues": 79
+      },
+      "dataelement/dsh-desktop": {
+        "stars": 15621,
+        "forks": 528,
+        "issues": 197
+      },
+      "eigent-ai/eigent": {
+        "stars": 15614,
+        "forks": 1874,
+        "issues": 250
+      },
+      "k2-fsa/sherpa-onnx": {
+        "stars": 15387,
+        "forks": 1800,
+        "issues": 679
+      },
+      "nidhinjs/prompt-master": {
+        "stars": 14653,
+        "forks": 1843,
+        "issues": 27
+      },
+      "FlashML-org/FreeToken": {
+        "stars": 14609,
+        "forks": 1471,
+        "issues": 451
+      },
+      "krillinai/OpenCreator": {
+        "stars": 13737,
+        "forks": 1507,
+        "issues": 40
+      },
+      "Lightning-AI/litgpt": {
+        "stars": 13718,
+        "forks": 1664,
+        "issues": 315
+      },
+      "EverMind-AI/EverOS": {
+        "stars": 13516,
+        "forks": 1044,
+        "issues": 59
+      },
+      "OrchestratorInc/agent-orchestrator": {
+        "stars": 13384,
+        "forks": 1842,
+        "issues": 938
+      },
+      "ritchieng/the-incredible-pytorch": {
+        "stars": 12664,
+        "forks": 2212,
+        "issues": 6
+      },
+      "EvanLi/Github-Ranking": {
+        "stars": 12457,
+        "forks": 718,
+        "issues": 34
+      },
+      "MemTensor/MemOS": {
+        "stars": 11943,
+        "forks": 1267,
+        "issues": 145
+      },
+      "EmbraceAGI/awesome-chatgpt-zh": {
+        "stars": 11764,
+        "forks": 1071,
+        "issues": 15
+      },
+      "getagentseal/codeburn": {
+        "stars": 11525,
+        "forks": 972,
+        "issues": 30
+      },
+      "kangarooking/cangjie-skill": {
+        "stars": 11486,
+        "forks": 1335,
+        "issues": 23
+      },
+      "EKKOLearnAI/ekko-studio": {
+        "stars": 11475,
+        "forks": 1418,
+        "issues": 494
+      },
+      "akitaonrails/ai-memory": {
+        "stars": 11426,
+        "forks": 812,
+        "issues": 9
+      },
+      "spinabot/brigade": {
+        "stars": 11348,
+        "forks": 181,
+        "issues": 38
+      },
+      "adongwanai/AgentGuide": {
+        "stars": 11050,
+        "forks": 1035,
+        "issues": 9
+      },
+      "KalyanKS-NLP/llm-engineer-toolkit": {
+        "stars": 10885,
+        "forks": 1711,
+        "issues": 23
+      },
+      "awesome-opencode/awesome-opencode": {
+        "stars": 10662,
+        "forks": 1029,
+        "issues": 505
+      },
+      "timschneeb/awesome-shizuku": {
+        "stars": 10541,
+        "forks": 292,
         "issues": 2
       }
     }
